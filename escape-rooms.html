@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SECTOR // Infinite Escape Rooms</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:none}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Courier New',monospace;color:#cfe}
+  #game{position:fixed;inset:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;background:#000}
+  /* CRT overlay */
+  #crt{position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:
+      radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.65) 100%),
+      repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.12) 3px);
+    mix-blend-mode:multiply}
+  /* HUD */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:8;font-size:13px}
+  #topbar{position:absolute;top:8px;left:10px;text-shadow:0 0 6px #0f8,0 0 2px #000;line-height:1.5}
+  #topbar .room{font-size:18px;font-weight:bold;letter-spacing:2px;color:#7fffd4}
+  #topbar .obj{color:#9fd;opacity:.85}
+  #codebox{position:absolute;top:8px;right:10px;text-align:right;text-shadow:0 0 6px #0ff,0 0 2px #000}
+  #codebox .lbl{font-size:11px;opacity:.7}
+  #codebox .val{font-size:22px;letter-spacing:4px;color:#3ff;font-weight:bold}
+  #prompt{position:absolute;left:50%;bottom:38%;transform:translateX(-50%);
+    padding:6px 14px;border:1px solid #0fa6;border-radius:4px;background:rgba(0,20,15,.55);
+    color:#9fffe0;text-shadow:0 0 6px #0f8;font-size:15px;display:none;white-space:nowrap}
+  #crosshair{position:absolute;left:50%;top:50%;width:14px;height:14px;transform:translate(-50%,-50%);
+    border:1px solid rgba(180,255,230,.5);border-radius:50%;box-shadow:0 0 5px rgba(0,255,170,.4)}
+  #crosshair::after{content:'';position:absolute;left:50%;top:50%;width:2px;height:2px;background:#aff;transform:translate(-50%,-50%);border-radius:50%}
+  #toast{position:absolute;left:50%;bottom:48%;transform:translateX(-50%);max-width:80%;text-align:center;
+    color:#ffe;font-size:16px;text-shadow:0 0 8px #f0a,0 0 3px #000;opacity:0;transition:opacity .3s}
+  /* Controls */
+  #ctl{position:fixed;inset:0;z-index:9}
+  #joy{position:absolute;left:18px;bottom:24px;width:130px;height:130px;border-radius:50%;
+    background:radial-gradient(circle,rgba(0,40,30,.35),rgba(0,20,15,.2));border:2px solid rgba(0,255,170,.3);}
+  #knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#0fb,#063);border:2px solid rgba(180,255,230,.6);box-shadow:0 0 12px rgba(0,255,170,.5)}
+  .btn{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:bold;letter-spacing:1px;color:#bff;text-shadow:0 0 5px #000;
+    border:2px solid rgba(0,255,200,.45);background:radial-gradient(circle at 35% 30%,rgba(0,80,60,.6),rgba(0,25,20,.7));
+    box-shadow:0 0 10px rgba(0,255,170,.25)}
+  .btn:active{background:radial-gradient(circle at 35% 30%,rgba(0,160,120,.9),rgba(0,60,45,.9));transform:scale(.94)}
+  .btn.on{background:radial-gradient(circle at 35% 30%,rgba(255,120,0,.9),rgba(90,30,0,.9));border-color:#fb6;color:#fff}
+  #bJump{right:24px;bottom:120px;width:78px;height:78px}
+  #bCrawl{right:118px;bottom:54px;width:70px;height:70px}
+  #bSearch{right:24px;bottom:30px;width:84px;height:84px;font-size:14px;color:#fff;border-color:#3ff;
+    background:radial-gradient(circle at 35% 30%,rgba(0,120,140,.7),rgba(0,40,55,.8))}
+  #bClimb{right:130px;bottom:140px;width:70px;height:70px;display:none}
+  /* Keypad */
+  #pad{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.78);backdrop-filter:blur(3px)}
+  #padbox{width:280px;max-width:88vw;padding:18px;border:2px solid #0ff;border-radius:10px;
+    background:linear-gradient(160deg,#031,#010);box-shadow:0 0 40px rgba(0,255,200,.4)}
+  #padbox h3{text-align:center;color:#7fffd4;letter-spacing:3px;margin-bottom:6px;font-size:15px}
+  #padDisp{height:54px;margin:8px 0 14px;border:1px solid #0fa8;border-radius:6px;background:#000a07;
+    display:flex;align-items:center;justify-content:center;font-size:34px;letter-spacing:10px;color:#3ff;
+    text-shadow:0 0 12px #0ff;font-weight:bold}
+  #padDisp.bad{color:#f55;text-shadow:0 0 12px #f00;animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  #padgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .key{padding:14px 0;text-align:center;font-size:22px;font-weight:bold;color:#cff;border:1px solid rgba(0,255,200,.4);
+    border-radius:6px;background:rgba(0,60,50,.5)}
+  .key:active{background:rgba(0,150,120,.8)}
+  .key.fn{font-size:14px;color:#ffb}
+  /* Start screen */
+  #start{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;background:radial-gradient(ellipse at center,#021410,#000);padding:24px}
+  #start h1{font-size:34px;letter-spacing:6px;color:#0fc;text-shadow:0 0 20px #0f8;margin-bottom:6px}
+  #start .sub{color:#6fd;letter-spacing:3px;opacity:.8;margin-bottom:22px;font-size:13px}
+  #start p{max-width:480px;color:#9fd;font-size:13px;line-height:1.7;opacity:.9;margin-bottom:8px}
+  #start .keys{color:#7fb;font-size:12px;opacity:.7;margin-top:14px;line-height:1.8}
+  #startBtn{margin-top:26px;padding:16px 44px;font-size:18px;letter-spacing:3px;font-weight:bold;color:#001;
+    background:linear-gradient(#0fd,#0a8);border:none;border-radius:8px;box-shadow:0 0 30px rgba(0,255,200,.6);cursor:pointer}
+  #startBtn:active{transform:scale(.96)}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="cv"></canvas>
+</div>
+<div id="crt"></div>
+
+<div id="hud">
+  <div id="topbar">
+    <div class="room" id="roomLbl">ROOM 01</div>
+    <div class="obj">// locate the 4-digit access code</div>
+  </div>
+  <div id="codebox">
+    <div class="lbl">ACCESS CODE</div>
+    <div class="val" id="codeVal">????</div>
+  </div>
+  <div id="crosshair"></div>
+  <div id="prompt"></div>
+  <div id="toast"></div>
+</div>
+
+<div id="ctl">
+  <div id="joy"><div id="knob"></div></div>
+  <div class="btn" id="bClimb">CLIMB</div>
+  <div class="btn" id="bJump">JUMP</div>
+  <div class="btn" id="bCrawl">CRAWL</div>
+  <div class="btn" id="bSearch">SEARCH</div>
+</div>
+
+<div id="pad">
+  <div id="padbox">
+    <h3>// DOOR LOCK</h3>
+    <div id="padDisp">____</div>
+    <div id="padgrid">
+      <div class="key" data-k="1">1</div><div class="key" data-k="2">2</div><div class="key" data-k="3">3</div>
+      <div class="key" data-k="4">4</div><div class="key" data-k="5">5</div><div class="key" data-k="6">6</div>
+      <div class="key" data-k="7">7</div><div class="key" data-k="8">8</div><div class="key" data-k="9">9</div>
+      <div class="key fn" data-k="C">CLR</div><div class="key" data-k="0">0</div><div class="key fn" data-k="E">ENTER</div>
+    </div>
+  </div>
+</div>
+
+<div id="start">
+  <h1>SECTOR</h1>
+  <div class="sub">INFINITE ESCAPE PROTOCOL</div>
+  <p>You wake locked in a decaying sector cell. A 4-digit access code is hidden somewhere in the room — taped under a bed, stashed inside a locker, or stuck on top of a tall shelf.</p>
+  <p><b>Search</b> the furniture. <b>Crawl</b> to look underneath things. <b>Climb the ladder</b> or <b>jump</b> to see what's hidden up high. Find the code, enter it at the door, and descend deeper. Forever.</p>
+  <div class="keys">
+    DESKTOP&nbsp; WASD move · MOUSE look (click to lock) · SPACE jump · C crawl · E search · climb: stand on ladder + SPACE<br>
+    MOBILE&nbsp;&nbsp; left stick move · drag right to look · on-screen JUMP / CRAWL / CLIMB / SEARCH
+  </div>
+  <button id="startBtn">ENTER THE SECTOR</button>
+</div>
+
+<script>
+"use strict";
+//==================================================================
+// SECTOR — infinite first-person dystopian escape rooms (raycaster)
+//==================================================================
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d', {alpha:false});
+let RW=480, RH=270, P=300, HALF;          // render res + projection const
+const FOV = 66*Math.PI/180;
+const FOVS = Math.tan(FOV/2);             // plane scale
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  RW = Math.max(300, Math.min(560, Math.round(w/2)));
+  RH = Math.round(RW * h / w);
+  cv.width = RW; cv.height = RH;
+  P = RW/(2*FOVS);
+  HALF = RW/2;
+}
+window.addEventListener('resize', resize); resize();
+
+//------------------------------------------------ utils
+const rnd01 = ()=>Math.random();
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+function hsl(h,s,l){h=((h%360)+360)%360;return `hsl(${h.toFixed(0)},${(s*100).toFixed(0)}%,${(l*100).toFixed(0)}%)`;}
+
+//------------------------------------------------ furniture catalog
+// flags: which posture can hide a code; w/h in world units; solid collision
+const CAT = {
+  closet:  {w:.9, h:.95, solid:1, hide:['in','top'],     name:'closet'},
+  locker:  {w:.8, h:.92, solid:1, hide:['in','top'],     name:'locker'},
+  shelf:   {w:.88,h:.95, solid:1, hide:['top','in'],     name:'shelf'},
+  fridge:  {w:.8, h:.9,  solid:1, hide:['in','top'],     name:'refrigerator'},
+  dresser: {w:.92,h:.62, solid:1, hide:['in','under','top'], name:'dresser'},
+  bed:     {w:1.3,h:.42, solid:1, hide:['under'],        name:'bed'},
+  table:   {w:1.0,h:.5,  solid:1, hide:['under','top'],  name:'table'},
+  crate:   {w:.62,h:.55, solid:1, hide:['in','top'],     name:'crate'},
+  barrel:  {w:.6, h:.62, solid:1, hide:['top'],          name:'barrel'},
+  tv:      {w:.9, h:.72, solid:1, hide:['top'],          name:'TV unit'},
+  terminal:{w:.82,h:.78, solid:1, hide:['in'],           name:'terminal'},
+  toilet:  {w:.6, h:.46, solid:1, hide:[],               name:'toilet'},
+  sink:    {w:.72,h:.52, solid:1, hide:[],               name:'sink'},
+  ladder:  {w:.6, h:.99, solid:0, hide:[],               name:'ladder'},
+};
+
+//------------------------------------------------ world state
+let G;            // game state object
+let started=false;
+
+function newPalette(seed){
+  const r=mulberry(seed);
+  const base = r()*360;
+  const scheme = Math.floor(r()*4);
+  let wallH, floorH, accentH;
+  if(scheme===0){ wallH=base; floorH=base+15; accentH=base+150; }      // mono-ish
+  else if(scheme===1){ wallH=base; floorH=base+180; accentH=base+90; } // complementary
+  else if(scheme===2){ wallH=base; floorH=base+30; accentH=base+200; } // toxic
+  else { wallH=base; floorH=base-40; accentH=base+120; }
+  return {
+    r, seed,
+    wallA: hsl(wallH, .25+ r()*.3, .14+r()*.1),
+    wallB: hsl(wallH+ (r()*30-15), .3, .22+r()*.12),
+    wallC: hsl(wallH+ (r()*40), .35, .3),
+    rivet: hsl(wallH, .2, .42),
+    floor1: hsl(floorH, .35, .10),
+    floor2: hsl(floorH, .4, .05),
+    ceil1: hsl(wallH, .25, .07),
+    ceil2: hsl(wallH, .2, .02),
+    accent: hsl(accentH, .9, .55),
+    accent2: hsl(accentH+40, .85, .6),
+    metal: hsl(wallH+10, .12, .55),
+    rust: hsl(28+r()*14, .6, .35),
+    glow: hsl(accentH, 1, .6),
+    wallHue: wallH, accHue: accentH, floorHue: floorH
+  };
+}
+
+//------------------------------------------------ wall / door textures
+function makeWallTex(pal){
+  const c=document.createElement('canvas');c.width=64;c.height=64;const x=c.getContext('2d');
+  const r=pal.r;
+  x.fillStyle=pal.wallA;x.fillRect(0,0,64,64);
+  // panels
+  for(let i=0;i<3;i++){
+    x.fillStyle = i%2? pal.wallB:pal.wallA;
+    x.fillRect(0,i*22,64,21);
+    x.strokeStyle='rgba(0,0,0,.5)';x.lineWidth=1;x.strokeRect(.5,i*22+.5,63,21);
+  }
+  // vertical seams
+  x.strokeStyle='rgba(0,0,0,.35)';
+  for(let sx=16;sx<64;sx+=16){x.beginPath();x.moveTo(sx,0);x.lineTo(sx,64);x.stroke();}
+  // rivets
+  x.fillStyle=pal.rivet;
+  for(let yy=4;yy<64;yy+=20)for(let xx=5;xx<64;xx+=16){x.fillRect(xx,yy,2,2);}
+  // grime / stains
+  for(let i=0;i<28;i++){
+    x.fillStyle=`rgba(0,0,0,${.05+r()*.18})`;
+    const sw=2+r()*10;x.fillRect(r()*64, r()*64, sw, sw*(2+r()*4));
+  }
+  // accent graffiti / hazard
+  if(r()<.7){
+    x.save();x.translate(r()*40,r()*40);x.rotate(r()*0.4-0.2);
+    x.fillStyle=pal.accent;x.globalAlpha=.5;
+    if(r()<.5){for(let i=0;i<5;i++)x.fillRect(i*7,0,4,18);} // bars
+    else {x.font='bold 16px monospace';x.fillText(['X7','06','NO','∆','//'][Math.floor(r()*5)],0,14);}
+    x.restore();x.globalAlpha=1;
+  }
+  // pipe
+  if(r()<.6){const px=r()*54;x.fillStyle=pal.metal;x.fillRect(px,0,5,64);x.fillStyle='rgba(255,255,255,.15)';x.fillRect(px,0,2,64);}
+  return c;
+}
+function makeDoorTex(pal){
+  const c=document.createElement('canvas');c.width=64;c.height=64;const x=c.getContext('2d');
+  x.fillStyle=hsl(pal.wallHue,.15,.12);x.fillRect(0,0,64,64);
+  // big blast door
+  x.fillStyle=pal.metal;x.fillRect(6,2,52,60);
+  x.fillStyle='rgba(0,0,0,.4)';x.fillRect(31,2,2,60);
+  // hazard stripes top/bottom
+  for(let i=-1;i<10;i++){x.fillStyle = i%2?'#1a1a1a':pal.accent2;x.save();x.beginPath();x.rect(6,2,52,8);x.clip();x.fillRect(6+i*8-8,2,8,8);x.fillRect(6+i*8-4,2,4,8);x.restore();}
+  x.fillStyle=pal.accent2;for(let i=0;i<7;i++){x.fillRect(6+i*8,2,4,8);x.fillRect(6+i*8,54,4,8);}
+  x.fillStyle='#111';x.fillRect(6,2,52,8);x.fillRect(6,54,52,8);
+  x.fillStyle=pal.accent2;for(let i=0;i<7;i++){x.fillRect(8+i*8,2,4,8);x.fillRect(8+i*8,54,4,8);}
+  // keypad
+  x.fillStyle='#020';x.fillRect(40,24,16,18);x.strokeStyle=pal.glow;x.lineWidth=1;x.strokeRect(40.5,24.5,15,17);
+  x.fillStyle=pal.glow;for(let r2=0;r2<3;r2++)for(let cc=0;cc<3;cc++)x.fillRect(42+cc*5,26+r2*5,3,3);
+  // window slot
+  x.fillStyle='#011';x.fillRect(14,16,18,12);x.strokeStyle=pal.accent;x.strokeRect(14.5,16.5,17,11);
+  x.fillStyle=pal.accent;x.globalAlpha=.6;x.font='bold 8px monospace';x.fillText('LOCKED',14,46);x.globalAlpha=1;
+  // rivets
+  x.fillStyle='#000';for(let yy=6;yy<60;yy+=12){x.fillRect(9,yy,2,2);x.fillRect(53,yy,2,2);}
+  return c;
+}
+
+//------------------------------------------------ furniture texture (per instance, unique)
+function makeFurnTex(type, pal, seed){
+  const def=CAT[type]; const r=mulberry(seed);
+  const TW=64, TH=Math.round(64*def.h/def.w);
+  const c=document.createElement('canvas');c.width=TW;c.height=TH;const x=c.getContext('2d');
+  const accH = pal.accHue + (r()*120-60);
+  const main = hsl(accH, .4+r()*.4, .3+r()*.25);
+  const dark = hsl(accH, .4, .14);
+  const lite = hsl(accH, .5, .55);
+  const W=TW, H=TH;
+  const box=(bx,by,bw,bh,col)=>{x.fillStyle=col;x.fillRect(bx,by,bw,bh);x.strokeStyle='rgba(0,0,0,.5)';x.lineWidth=1;x.strokeRect(bx+.5,by+.5,bw-1,bh-1);};
+  function grime(){for(let i=0;i<14;i++){x.fillStyle=`rgba(0,0,0,${.05+r()*.2})`;x.fillRect(r()*W,r()*H,1+r()*5,1+r()*8);}}
+  function sticker(){if(r()<.6){x.fillStyle=pal.accent;x.globalAlpha=.7;x.fillRect(W*0.2+r()*W*0.4, H*0.2+r()*H*0.5, 4+r()*8,4+r()*6);x.globalAlpha=1;}}
+
+  switch(type){
+    case 'closet':{
+      box(2,0,W-4,H,main);
+      // two doors
+      box(3,2,(W-8)/2,H-4,hsl(accH,.4,.26)); box(W/2+1,2,(W-8)/2,H-4,hsl(accH,.42,.3));
+      x.fillStyle=lite;x.fillRect(W/2-3,H*0.45,2,12);x.fillRect(W/2+3,H*0.45,2,12); // handles
+      // top vents
+      x.fillStyle=dark;for(let i=0;i<4;i++)x.fillRect(8,4+i*3,W-16,1);
+      grime();sticker();break;}
+    case 'locker':{
+      box(2,0,W-4,H,hsl(accH,.25,.4));
+      for(let i=0;i<14;i++){x.fillStyle='rgba(0,0,0,.4)';x.fillRect(8,6+i*((H-12)/14),W-16,1);} //vents
+      x.fillStyle=dark;x.fillRect(W-14,H*0.4,3,14);//handle
+      x.fillStyle=pal.accent;x.globalAlpha=.6;x.fillRect(10,4,W-20,5);x.globalAlpha=1;//label
+      grime();sticker();break;}
+    case 'shelf':{
+      box(1,0,W-2,H,dark);
+      const lv=4;for(let i=0;i<=lv;i++){x.fillStyle=main;x.fillRect(2,i*(H-3)/lv,W-4,3);}
+      // items resting on each shelf
+      for(let i=0;i<14;i++){x.fillStyle=hsl(r()*360,.6,.45);const sh=4+r()*((H/lv)-6);const lvl=Math.floor(r()*lv);const yy=lvl*(H-3)/lv-sh-1;x.fillRect(4+r()*(W-10), Math.max(0,yy), 3+r()*5, sh);}
+      grime();break;}
+    case 'fridge':{
+      box(2,0,W-4,H,hsl(accH,.15,.7));
+      x.strokeStyle='rgba(0,0,0,.4)';x.beginPath();x.moveTo(2,H*0.32);x.lineTo(W-2,H*0.32);x.stroke();//freezer
+      x.fillStyle=dark;x.fillRect(W-12,4,3,H*0.25);x.fillRect(W-12,H*0.4,3,H*0.4);//handles
+      sticker();grime();break;}
+    case 'dresser':{
+      box(1,0,W-2,H,main);
+      for(let i=0;i<3;i++){box(4,4+i*(H-6)/3,W-8,(H-8)/3,hsl(accH,.4,.24));x.fillStyle=lite;x.fillRect(W/2-4,4+i*(H-6)/3+(H-8)/6-1,8,2);}
+      grime();break;}
+    case 'bed':{
+      x.fillStyle=hsl(accH,.3,.22);x.fillRect(0,H*0.4,W,H*0.6);//frame
+      x.fillStyle=hsl(accH,.5,.45);x.fillRect(2,H*0.15,W-4,H*0.5);//mattress
+      x.fillStyle=hsl(accH+30,.5,.55);x.fillRect(2,H*0.15,W*0.3,H*0.5);//pillow
+      for(let i=0;i<5;i++){x.fillStyle=`rgba(0,0,0,.12)`;x.fillRect(W*0.35+i*(W*0.6/5),H*0.2,2,H*0.42);}
+      x.fillStyle=dark;x.fillRect(0,H*0.4,3,H*0.6);x.fillRect(W-3,H*0.4,3,H*0.6);//legs
+      grime();break;}
+    case 'table':{
+      x.fillStyle=main;x.fillRect(0,0,W,H*0.22);//top
+      x.fillStyle=dark;x.fillRect(3,H*0.22,4,H*0.78);x.fillRect(W-7,H*0.22,4,H*0.78);//legs
+      // clutter on top
+      for(let i=0;i<4;i++){x.fillStyle=hsl(r()*360,.6,.5);x.fillRect(6+r()*(W-14),H*0.05,3+r()*5,H*0.16);}
+      grime();break;}
+    case 'crate':{
+      box(0,0,W,H,pal.rust);
+      x.strokeStyle='rgba(0,0,0,.5)';x.lineWidth=2;
+      x.beginPath();x.moveTo(0,0);x.lineTo(W,H);x.moveTo(W,0);x.lineTo(0,H);x.stroke();
+      x.strokeRect(3,3,W-6,H-6);
+      x.fillStyle=pal.accent;x.globalAlpha=.6;x.fillRect(W*0.3,H*0.35,W*0.4,6);x.globalAlpha=1;
+      grime();break;}
+    case 'barrel':{
+      const grad=x.createLinearGradient(0,0,W,0);grad.addColorStop(0,dark);grad.addColorStop(.5,hsl(accH,.7,.4));grad.addColorStop(1,dark);
+      x.fillStyle=grad;x.fillRect(W*0.08,0,W*0.84,H);
+      x.fillStyle='rgba(0,0,0,.4)';x.fillRect(W*0.08,H*0.25,W*0.84,3);x.fillRect(W*0.08,H*0.7,W*0.84,3);
+      x.fillStyle=pal.accent2;x.globalAlpha=.7;x.beginPath();x.arc(W/2,H*0.5,W*0.18,0,7);x.fill();x.globalAlpha=1;//hazard symbol
+      grime();break;}
+    case 'tv':{
+      x.fillStyle=dark;x.fillRect(W*0.2,H*0.6,W*0.6,H*0.4);//stand
+      box(0,0,W,H*0.62,'#0a0a0a');//screen body
+      // static screen
+      x.fillStyle='#012';x.fillRect(4,4,W-8,H*0.62-8);
+      for(let i=0;i<60;i++){x.fillStyle=`rgba(${100+r()*155},${150+r()*105},${180+r()*75},.5)`;x.fillRect(4+r()*(W-8),4+r()*(H*0.62-8),2,1);}
+      x.fillStyle=pal.glow;x.globalAlpha=.3;x.fillRect(4,4,W-8,H*0.62-8);x.globalAlpha=1;
+      grime();break;}
+    case 'terminal':{
+      x.fillStyle=dark;x.fillRect(W*0.15,H*0.5,W*0.7,H*0.5);
+      box(W*0.05,0,W*0.9,H*0.5,'#020');
+      x.fillStyle=pal.glow;x.font='6px monospace';
+      for(let i=0;i<5;i++)x.fillText('> '+['SYS','ERR','...','404','RUN'][Math.floor(r()*5)], W*0.1, 8+i*7);
+      grime();break;}
+    case 'toilet':{
+      x.fillStyle=hsl(200,.1,.8);x.fillRect(W*0.25,0,W*0.5,H*0.45);//tank
+      x.beginPath();x.ellipse(W*0.5,H*0.7,W*0.32,H*0.28,0,0,7);x.fill();//bowl
+      x.fillStyle='rgba(0,0,0,.3)';x.beginPath();x.ellipse(W*0.5,H*0.62,W*0.18,H*0.13,0,0,7);x.fill();
+      grime();break;}
+    case 'sink':{
+      x.fillStyle=hsl(200,.08,.75);x.fillRect(W*0.1,H*0.35,W*0.8,H*0.3);
+      x.fillStyle=dark;x.fillRect(W*0.4,H*0.65,3,H*0.35);x.fillRect(W*0.57,H*0.65,3,H*0.35);
+      x.fillStyle=hsl(200,.1,.4);x.fillRect(W*0.2,0,W*0.6,H*0.32);//mirror
+      x.fillStyle='rgba(255,255,255,.12)';x.fillRect(W*0.25,0,W*0.15,H*0.32);
+      grime();break;}
+    case 'ladder':{
+      x.fillStyle=pal.metal;x.fillRect(W*0.2,0,4,H);x.fillRect(W*0.75,0,4,H);//rails
+      for(let i=0;i<10;i++){x.fillStyle=hsl(accH,.3,.45);x.fillRect(W*0.2,H*0.05+i*(H*0.9/9),W*0.58,3);}//rungs
+      grime();break;}
+    default: box(0,0,W,H,main);
+  }
+  return {canvas:c, w:def.w, h:def.h};
+}
+
+//------------------------------------------------ build a room
+function buildRoom(level){
+  const seed = (level*2654435761)>>>0 ^ (Math.floor(Math.random()*1e9));
+  const pal = newPalette(seed);
+  const R = mulberry(seed^0x9e37);
+  const sz = 9 + Math.floor(R()*4)*1 + Math.min(4,Math.floor(level/3)); // 9..~16
+  const N = clamp(sz,9,16);
+  // grid: 1 wall, 0 floor, 2 door
+  const grid = [];
+  for(let y=0;y<N;y++){const row=[];for(let x=0;x<N;x++){row.push((x===0||y===0||x===N-1||y===N-1)?1:0);}grid.push(row);}
+  // door on a random wall (not corner)
+  const side=Math.floor(R()*4); let dx,dy;
+  if(side===0){dx=1+Math.floor(R()*(N-2));dy=0;}
+  else if(side===1){dx=1+Math.floor(R()*(N-2));dy=N-1;}
+  else if(side===2){dx=0;dy=1+Math.floor(R()*(N-2));}
+  else {dx=N-1;dy=1+Math.floor(R()*(N-2));}
+  grid[dy][dx]=2;
+  const door={cx:dx+0.5, cy:dy+0.5};
+
+  // textures
+  const wallTex=makeWallTex(pal), doorTex=makeDoorTex(pal);
+
+  // spawn: opposite-ish interior cell
+  let spawn={x:N/2, y:N/2, a:R()*6.28};
+  // free cells
+  const occ = {};
+  occ[(Math.floor(spawn.x))+','+(Math.floor(spawn.y))]=1;
+
+  // place furniture
+  const furn=[];
+  const types=['closet','locker','shelf','fridge','dresser','bed','table','crate','barrel','tv','terminal','toilet','sink'];
+  const count = clamp(7+Math.floor(R()*5)+Math.floor(level/2),7,14);
+  let tries=0;
+  // always include a ladder against an interior wall-adjacent cell
+  function freeCell(){
+    for(let k=0;k<60;k++){
+      const cx=1+Math.floor(R()*(N-2)), cy=1+Math.floor(R()*(N-2));
+      const key=cx+','+cy;
+      if(occ[key]) continue;
+      if(Math.hypot(cx+0.5-spawn.x, cy+0.5-spawn.y)<1.3) continue;
+      if(Math.hypot(cx+0.5-door.cx, cy+0.5-door.cy)<1.4) continue;
+      occ[key]=1; return {cx,cy};
+    }
+    return null;
+  }
+  // ladder
+  const lc=freeCell();
+  if(lc){furn.push(mkFurn('ladder',lc,pal,R));}
+  for(let i=0;i<count;i++){
+    const c=freeCell(); if(!c) break;
+    const t=types[Math.floor(R()*types.length)];
+    furn.push(mkFurn(t,c,pal,R));
+  }
+
+  // choose hide spot + posture among furniture that can hide
+  const hidable = furn.filter(f=>CAT[f.type].hide.length>0);
+  let hideSpot=null, posture='in';
+  if(hidable.length){
+    hideSpot = hidable[Math.floor(R()*hidable.length)];
+    const opts = CAT[hideSpot.type].hide;
+    posture = opts[Math.floor(R()*opts.length)];
+    hideSpot.isHide=true; hideSpot.posture=posture;
+  }
+  const code = (''+Math.floor(1000+R()*9000));
+
+  return {level, N, grid, door, pal, wallTex, doorTex, furn, hideSpot, posture, code,
+    px:spawn.x, py:spawn.y, pa:spawn.a};
+}
+function mkFurn(type,c,pal,R){
+  const tex=makeFurnTex(type,pal,Math.floor(R()*1e9));
+  return {type, x:c.cx+0.5, y:c.cy+0.5, tex:tex.canvas, w:tex.w, h:tex.h,
+    solid:CAT[type].solid, isHide:false, posture:null};
+}
+
+//------------------------------------------------ player / input
+const player={x:0,y:0,a:0, pitch:0, baseH:0.5, jumpZ:0, jumpV:0, climb:0,
+  crawl:false, camZ:0.5, found:false, nearLadder:false};
+const input={fwd:0, strafe:0, look:0, lookUp:0, jump:false, climbHold:false};
+let keys={};
+
+//------------------------------------------------ start / load room
+let foundFlash=0;
+function loadRoom(level){
+  G=buildRoom(level);
+  player.x=G.px; player.y=G.py; player.a=G.pa; player.pitch=0;
+  player.crawl=false; player.jumpZ=0; player.jumpV=0; player.climb=0;
+  player.found=false; player.baseH=0.5; player.camZ=0.5;
+  document.getElementById('roomLbl').textContent='ROOM '+String(level).padStart(2,'0');
+  document.getElementById('codeVal').textContent='????';
+  document.getElementById('codeVal').style.color='#3ff';
+  setCrawlBtn(false);
+}
+
+//------------------------------------------------ collision
+function blocked(nx,ny){
+  const N=G.N;
+  const gx=Math.floor(nx), gy=Math.floor(ny);
+  if(gx<0||gy<0||gx>=N||gy>=N) return true;
+  if(G.grid[gy][gx]!==0) return true; // wall or door solid
+  // furniture
+  for(const f of G.furn){
+    if(!f.solid) continue;
+    const rr=(CAT[f.type].w*0.45)+0.16;
+    if(Math.abs(nx-f.x)<rr && Math.abs(ny-f.y)<rr) return true;
+  }
+  return false;
+}
+function movePlayer(dx,dy){
+  if(!blocked(player.x+dx, player.y)) player.x+=dx;
+  if(!blocked(player.x, player.y+dy)) player.y+=dy;
+}
+
+//------------------------------------------------ update
+let last=performance.now();
+function update(dt){
+  // turning (keyboard)
+  if(keys['arrowleft']) player.a-=2.2*dt;
+  if(keys['arrowright']) player.a+=2.2*dt;
+  if(keys['arrowup']) player.pitch=clamp(player.pitch+1.2*dt,-0.85,0.85);
+  if(keys['arrowdown']) player.pitch=clamp(player.pitch-1.2*dt,-0.85,0.85);
+  // look from drag accumulators
+  player.a += input.look; input.look=0;
+  player.pitch = clamp(player.pitch + input.lookUp, -0.9, 0.9); input.lookUp=0;
+
+  // movement
+  let mf=0, ms=0;
+  if(keys['w']) mf+=1; if(keys['s']) mf-=1;
+  if(keys['a']) ms-=1; if(keys['d']) ms+=1;
+  mf+=input.fwd; ms+=input.strafe;
+  const spd=(player.crawl?1.4: (player.climb>0.2?1.0:2.6))*dt;
+  if(mf||ms){
+    const len=Math.hypot(mf,ms)||1; mf/=len; ms/=len;
+    const dx=(Math.cos(player.a)*mf + Math.cos(player.a+Math.PI/2)*ms)*spd;
+    const dy=(Math.sin(player.a)*mf + Math.sin(player.a+Math.PI/2)*ms)*spd;
+    movePlayer(dx,dy);
+  }
+
+  // near ladder?
+  player.nearLadder=false;
+  for(const f of G.furn){ if(f.type==='ladder' && Math.hypot(player.x-f.x,player.y-f.y)<0.85){player.nearLadder=true;break;} }
+  document.getElementById('bClimb').style.display = player.nearLadder? 'flex':'none';
+
+  // climbing
+  const climbUp = (player.nearLadder && (input.climbHold || keys[' '] ));
+  if(climbUp){ player.climb=clamp(player.climb + 2.2*dt, 0, 2.2); }
+  else if(player.climb>0){ player.climb=clamp(player.climb - 4.5*dt, 0, 2.2); }
+
+  // jump (only if grounded & not on ladder)
+  if((input.jump || keys[' ']) && player.jumpZ===0 && player.climb<0.15 && !player.crawl){
+    player.jumpV=3.0;
+  }
+  input.jump=false;
+  if(player.jumpV!==0 || player.jumpZ>0){
+    player.jumpZ += player.jumpV*dt; player.jumpV -= 9.5*dt;
+    if(player.jumpZ<=0){player.jumpZ=0;player.jumpV=0;}
+  }
+
+  // camera height
+  player.baseH = player.crawl? 0.18 : 0.5;
+  player.camZ = clamp(player.baseH + player.jumpZ + player.climb, 0.1, 2.6);
+
+  // auto-reveal for TOP hide spots when elevated near object or high on ladder
+  if(G.hideSpot && !player.found){
+    const elev = (player.climb+player.jumpZ);
+    if(G.posture==='top'){
+      const near=Math.hypot(player.x-G.hideSpot.x,player.y-G.hideSpot.y)<2.2;
+      if((player.climb>1.5) || (elev>0.7 && near)){
+        revealCode("From up high you spot it — code taped on top of the "+CAT[G.hideSpot.type].name+".");
+      }
+    }
+  }
+
+  updatePrompt();
+  if(foundFlash>0) foundFlash-=dt;
+}
+
+function revealCode(msg){
+  if(player.found) return;
+  player.found=true; foundFlash=1.2;
+  document.getElementById('codeVal').textContent=G.code;
+  document.getElementById('codeVal').style.color='#0fa';
+  toast(msg+"  ACCESS CODE: "+G.code, 3200);
+}
+
+//------------------------------------------------ interaction targets
+function nearestFurn(){
+  let best=null, bd=1.5;
+  const fx=Math.cos(player.a), fy=Math.sin(player.a);
+  for(const f of G.furn){
+    if(f.type==='ladder') continue;
+    const dx=f.x-player.x, dy=f.y-player.y, d=Math.hypot(dx,dy);
+    if(d>1.45) continue;
+    const dot=(dx*fx+dy*fy)/(d||1);
+    if(dot<0.25) continue;
+    const score=d-dot*0.4;
+    if(score<bd){bd=score;best=f;}
+  }
+  return best;
+}
+function nearDoor(){
+  const dx=G.door.cx-player.x, dy=G.door.cy-player.y, d=Math.hypot(dx,dy);
+  if(d>1.6) return false;
+  const fx=Math.cos(player.a), fy=Math.sin(player.a);
+  return (dx*fx+dy*fy)/(d||1) > 0.1;
+}
+function updatePrompt(){
+  const pe=document.getElementById('prompt');
+  if(nearDoor()){pe.style.display='block';pe.textContent='⌨  SEARCH → enter door code';return;}
+  const f=nearestFurn();
+  if(f){pe.style.display='block';pe.textContent='🔍 search '+CAT[f.type].name;return;}
+  pe.style.display='none';
+}
+
+const flavors=["Empty. Just dust and regret.","Nothing but cracked plaster.","Old wires. No code.","Scratched warnings, no numbers.","A dead roach. Charming.","Sealed shut. Nothing here.","Just grime and shadows.","Someone got here first... nothing left."];
+function doSearch(){
+  if(nearDoor()){ openPad(); return; }
+  const f=nearestFurn();
+  if(!f){ return; }
+  if(f.isHide){
+    const need=f.posture;
+    const isCrawl=player.crawl && player.jumpZ<0.1 && player.climb<0.1;
+    const isStand=!player.crawl && player.camZ<0.7;
+    if(need==='under'){
+      if(isCrawl) revealCode("Taped underneath the "+CAT[f.type].name+" — there it is!");
+      else toast("There's a gap underneath... try CRAWLING to look under it.",2600);
+    } else if(need==='in'){
+      if(isStand||player.crawl) revealCode("Stashed inside the "+CAT[f.type].name+".");
+      else toast("Hard to reach from up here.",1800);
+    } else if(need==='top'){
+      toast("Something glints on top — you can't reach. CLIMB the ladder or JUMP up high.",2800);
+    }
+  } else {
+    toast(flavors[Math.floor(Math.random()*flavors.length)],1500);
+  }
+}
+
+//------------------------------------------------ rendering
+function render(){
+  const horizon = (RH/2) + player.pitch*P;
+  // ceiling / floor
+  const cg=ctx.createLinearGradient(0,0,0,Math.max(1,horizon));
+  cg.addColorStop(0,G.pal.ceil2);cg.addColorStop(1,G.pal.ceil1);
+  ctx.fillStyle=cg;ctx.fillRect(0,0,RW,Math.max(0,horizon));
+  const fg=ctx.createLinearGradient(0,horizon,0,RH);
+  fg.addColorStop(0,G.pal.floor2);fg.addColorStop(1,G.pal.floor1);
+  ctx.fillStyle=fg;ctx.fillRect(0,Math.max(0,horizon),RW,RH-Math.max(0,horizon));
+
+  const dirX=Math.cos(player.a), dirY=Math.sin(player.a);
+  const planeX=-dirY*FOVS, planeY=dirX*FOVS;
+  const zbuf=new Float32Array(RW);
+
+  // walls
+  for(let col=0;col<RW;col++){
+    const camX=2*col/RW-1;
+    const rdx=dirX+planeX*camX, rdy=dirY+planeY*camX;
+    let mapX=Math.floor(player.x), mapY=Math.floor(player.y);
+    const ddx=Math.abs(1/rdx), ddy=Math.abs(1/rdy);
+    let stepX,stepY,sdx,sdy;
+    if(rdx<0){stepX=-1;sdx=(player.x-mapX)*ddx;}else{stepX=1;sdx=(mapX+1-player.x)*ddx;}
+    if(rdy<0){stepY=-1;sdy=(player.y-mapY)*ddy;}else{stepY=1;sdy=(mapY+1-player.y)*ddy;}
+    let side=0, hit=0, cell=1, guard=0;
+    while(!hit && guard++<64){
+      if(sdx<sdy){sdx+=ddx;mapX+=stepX;side=0;}else{sdy+=ddy;mapY+=stepY;side=1;}
+      if(mapX<0||mapY<0||mapX>=G.N||mapY>=G.N){hit=1;cell=1;break;}
+      cell=G.grid[mapY][mapX];
+      if(cell!==0) hit=1;
+    }
+    let perp = side===0 ? (sdx-ddx) : (sdy-ddy);
+    if(perp<0.02) perp=0.02;
+    zbuf[col]=perp;
+    let wallXf = side===0 ? (player.y+perp*rdy) : (player.x+perp*rdx);
+    wallXf -= Math.floor(wallXf);
+    let texX=Math.floor(wallXf*64);
+    if((side===0&&rdx>0)||(side===1&&rdy<0)) texX=63-texX;
+    const lineH=P/perp;
+    const yBot=horizon + (player.camZ/perp)*P;
+    const yTop=horizon - ((1-player.camZ)/perp)*P;
+    const tex = cell===2? G.doorTex : G.wallTex;
+    ctx.drawImage(tex, texX,0,1,64, col, yTop, 1, yBot-yTop);
+    // shading
+    let fog=clamp(perp/13,0,0.82); if(side===1) fog=clamp(fog+0.14,0,0.86);
+    if(fog>0.01){ctx.fillStyle='rgba(0,0,0,'+fog+')';ctx.fillRect(col,yTop,1,yBot-yTop);}
+  }
+
+  // sprites (furniture) — sort far->near
+  const sp=G.furn.map(f=>({f,d:(f.x-player.x)**2+(f.y-player.y)**2})).sort((a,b)=>b.d-a.d);
+  const invDet=1/(planeX*dirY-dirX*planeY);
+  for(const {f} of sp){
+    const sx=f.x-player.x, sy=f.y-player.y;
+    const tX=invDet*(dirY*sx-dirX*sy);
+    const tY=invDet*(-planeY*sx+planeX*sy);
+    if(tY<=0.15) continue;
+    const screenX=HALF*(1+tX/tY);
+    const sw=(f.w*P)/tY;
+    const yBot=horizon + (player.camZ/tY)*P;
+    const yTop=horizon - ((f.h-player.camZ)/tY)*P;
+    const sh=yBot-yTop;
+    const startX=Math.floor(screenX-sw/2), endX=Math.ceil(screenX+sw/2);
+    const fog=clamp(1.25 - tY/12, 0.18, 1);
+    const tw=f.tex.width;
+    ctx.globalAlpha=fog;
+    for(let stripe=Math.max(0,startX);stripe<Math.min(RW,endX);stripe++){
+      if(tY>=zbuf[stripe]) continue;
+      let tx=Math.floor((stripe-(screenX-sw/2))/sw*tw);
+      if(tx<0)tx=0;if(tx>=tw)tx=tw-1;
+      ctx.drawImage(f.tex, tx,0,1,f.tex.height, stripe, yTop, 1, sh);
+    }
+    ctx.globalAlpha=1;
+    // glow hint on hide spot if found
+    if(f.isHide && player.found){
+      ctx.globalAlpha=0.25+0.15*Math.sin(performance.now()/200);
+      ctx.fillStyle=G.pal.glow;
+      for(let stripe=Math.max(0,startX);stripe<Math.min(RW,endX);stripe++){if(tY<zbuf[stripe])ctx.fillRect(stripe,yTop,1,Math.max(2,sh*0.18));}
+      ctx.globalAlpha=1;
+    }
+  }
+
+  // found flash
+  if(foundFlash>0){ctx.fillStyle='rgba(0,255,150,'+(foundFlash*0.25)+')';ctx.fillRect(0,0,RW,RH);}
+}
+
+//------------------------------------------------ main loop
+function frame(now){
+  let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05;
+  if(started){ update(dt); render(); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+//==================================================================
+// INPUT WIRING
+//==================================================================
+// keyboard
+window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;
+  if(k==='c'){toggleCrawl();}
+  if(k==='e'){doSearch();}
+  if(k===' '){e.preventDefault();}
+});
+window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+
+// pointer lock look (desktop)
+cv.addEventListener('click',()=>{ if(started && !('ontouchstart' in window)) cv.requestPointerLock&&cv.requestPointerLock(); });
+document.addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===cv){
+    player.a += e.movementX*0.0022;
+    player.pitch = clamp(player.pitch - e.movementY*0.0022, -0.9,0.9);
+  }
+});
+
+// touch look — any touch not on a control element
+let lookId=null, lastLX=0, lastLY=0;
+function isControl(t){return t.closest&&t.closest('#joy, .btn, #pad, #start, #padbox');}
+window.addEventListener('touchstart',e=>{
+  for(const t of e.changedTouches){
+    if(isControl(t.target)) continue;
+    if(lookId===null){lookId=t.identifier;lastLX=t.clientX;lastLY=t.clientY;}
+  }
+},{passive:false});
+window.addEventListener('touchmove',e=>{
+  for(const t of e.changedTouches){
+    if(t.identifier===lookId){
+      input.look += (t.clientX-lastLX)*0.005;
+      input.lookUp += -(t.clientY-lastLY)*0.005;
+      lastLX=t.clientX;lastLY=t.clientY;
+      e.preventDefault();
+    }
+  }
+},{passive:false});
+window.addEventListener('touchend',e=>{
+  for(const t of e.changedTouches){ if(t.identifier===lookId) lookId=null; }
+});
+
+// joystick
+const joy=document.getElementById('joy'), knob=document.getElementById('knob');
+let joyId=null, joyCX=0, joyCY=0;
+function joyStart(x,y,id){const r=joy.getBoundingClientRect();joyCX=r.left+r.width/2;joyCY=r.top+r.height/2;joyId=id;joyMove(x,y);}
+function joyMove(x,y){
+  let dx=x-joyCX, dy=y-joyCY; const max=55; const d=Math.hypot(dx,dy);
+  if(d>max){dx*=max/d;dy*=max/d;}
+  knob.style.left=(50+dx/max*42)+'%'; knob.style.top=(50+dy/max*42)+'%';
+  input.fwd = -dy/max; input.strafe = dx/max;
+}
+function joyEnd(){joyId=null;knob.style.left='50%';knob.style.top='50%';input.fwd=0;input.strafe=0;}
+joy.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];joyStart(t.clientX,t.clientY,t.identifier);},{passive:false});
+joy.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===joyId){joyMove(t.clientX,t.clientY);e.preventDefault();}},{passive:false});
+joy.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===joyId)joyEnd();},{passive:false});
+// mouse joystick (desktop testing)
+joy.addEventListener('mousedown',e=>{joyStart(e.clientX,e.clientY,'m');});
+window.addEventListener('mousemove',e=>{if(joyId==='m')joyMove(e.clientX,e.clientY);});
+window.addEventListener('mouseup',()=>{if(joyId==='m')joyEnd();});
+
+// buttons
+function bindBtn(id,onDown,onUp){
+  const el=document.getElementById(id);
+  const dn=e=>{e.preventDefault();onDown&&onDown();};
+  const up=e=>{e.preventDefault();onUp&&onUp();};
+  el.addEventListener('touchstart',dn,{passive:false});
+  el.addEventListener('touchend',up,{passive:false});
+  el.addEventListener('mousedown',dn); el.addEventListener('mouseup',up);
+}
+bindBtn('bJump',()=>{input.jump=true;});
+bindBtn('bClimb',()=>{input.climbHold=true;},()=>{input.climbHold=false;});
+bindBtn('bSearch',()=>{doSearch();});
+document.getElementById('bCrawl').addEventListener('touchstart',e=>{e.preventDefault();toggleCrawl();},{passive:false});
+document.getElementById('bCrawl').addEventListener('mousedown',e=>{e.preventDefault();toggleCrawl();});
+
+function toggleCrawl(){player.crawl=!player.crawl;setCrawlBtn(player.crawl);}
+function setCrawlBtn(on){document.getElementById('bCrawl').classList.toggle('on',on);}
+
+// toast
+let toastT=null;
+function toast(msg,ms){
+  const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';
+  clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity='0',ms||2000);
+}
+
+//------------------------------------------------ keypad
+let padVal='';
+function openPad(){padVal='';updatePad();document.getElementById('pad').style.display='flex';}
+function closePad(){document.getElementById('pad').style.display='none';}
+function updatePad(bad){
+  const d=document.getElementById('padDisp');
+  d.textContent=(padVal+'____').slice(0,4);
+  d.classList.toggle('bad',!!bad);
+}
+document.getElementById('padgrid').addEventListener('click',e=>{
+  const k=e.target.getAttribute('data-k'); if(!k)return;
+  if(k==='C'){padVal='';updatePad();}
+  else if(k==='E'){ submitPad(); }
+  else { if(padVal.length<4){padVal+=k;updatePad();} if(padVal.length===4){/*auto*/} }
+});
+document.getElementById('pad').addEventListener('click',e=>{ if(e.target.id==='pad') closePad(); });
+function submitPad(){
+  if(padVal===G.code){
+    closePad();
+    toast('ACCESS GRANTED // descending...',1500);
+    loadRoom(G.level+1);
+  } else {
+    updatePad(true);
+    setTimeout(()=>{padVal='';updatePad();},450);
+  }
+}
+// keyboard for pad when open
+window.addEventListener('keydown',e=>{
+  if(document.getElementById('pad').style.display!=='flex')return;
+  if(/[0-9]/.test(e.key)){if(padVal.length<4){padVal+=e.key;updatePad();}}
+  else if(e.key==='Enter')submitPad();
+  else if(e.key==='Backspace'||e.key==='Escape'){if(e.key==='Escape')closePad();padVal=padVal.slice(0,-1);updatePad();}
+});
+
+//------------------------------------------------ start
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('start').classList.add('hide');
+  started=true; last=performance.now();
+  loadRoom(1);
+  toast('Find the code. Crawl low, climb high.',2600);
+});
+// preload first room palette so render has something even before start
+loadRoom(1);
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:none}
   html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Courier New',monospace;color:#cfe}
-  canvas{position:absolute;inset:0;width:100%;height:100%;background:#000;image-rendering:auto}
+  canvas{position:absolute;inset:0;width:100%;height:100%;background:#000}
   #crt{position:fixed;inset:0;pointer-events:none;z-index:5;
     background:radial-gradient(ellipse at center, rgba(0,0,0,0) 58%, rgba(0,0,0,0.6) 100%),
       repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.10) 3px);
@@ -15,17 +15,17 @@
   #hud{position:fixed;inset:0;pointer-events:none;z-index:8;font-size:13px}
   #topbar{position:absolute;top:8px;left:10px;text-shadow:0 0 6px #0f8,0 0 2px #000;line-height:1.5}
   #topbar .room{font-size:18px;font-weight:bold;letter-spacing:2px;color:#7fffd4}
-  #topbar .obj{color:#9fd;opacity:.85}
+  #topbar .obj{color:#9fd;opacity:.85;font-size:12px}
   #codebox{position:absolute;top:8px;right:10px;text-align:right;text-shadow:0 0 6px #0ff,0 0 2px #000}
   #codebox .lbl{font-size:11px;opacity:.7}
-  #codebox .val{font-size:22px;letter-spacing:4px;color:#3ff;font-weight:bold}
-  #prompt{position:absolute;left:50%;bottom:38%;transform:translateX(-50%);padding:6px 14px;
+  #codebox .val{font-size:26px;letter-spacing:8px;color:#3ff;font-weight:bold}
+  #prompt{position:absolute;left:50%;bottom:36%;transform:translateX(-50%);padding:6px 14px;
     border:1px solid #0fa6;border-radius:4px;background:rgba(0,20,15,.55);color:#9fffe0;
-    text-shadow:0 0 6px #0f8;font-size:15px;display:none;white-space:nowrap}
+    text-shadow:0 0 6px #0f8;font-size:14px;display:none;white-space:nowrap}
   #crosshair{position:absolute;left:50%;top:50%;width:14px;height:14px;transform:translate(-50%,-50%);
     border:1px solid rgba(180,255,230,.5);border-radius:50%;box-shadow:0 0 5px rgba(0,255,170,.4)}
   #crosshair::after{content:'';position:absolute;left:50%;top:50%;width:2px;height:2px;background:#aff;transform:translate(-50%,-50%);border-radius:50%}
-  #toast{position:absolute;left:50%;bottom:48%;transform:translateX(-50%);max-width:80%;text-align:center;
+  #toast{position:absolute;left:50%;bottom:46%;transform:translateX(-50%);max-width:80%;text-align:center;
     color:#ffe;font-size:16px;text-shadow:0 0 8px #f0a,0 0 3px #000;opacity:0;transition:opacity .3s}
   #fps{position:absolute;bottom:6px;left:10px;font-size:10px;color:#5fa;opacity:.5}
   #ctl{position:fixed;inset:0;z-index:9}
@@ -39,11 +39,11 @@
     box-shadow:0 0 10px rgba(0,255,170,.25)}
   .btn:active{background:radial-gradient(circle at 35% 30%,rgba(0,160,120,.9),rgba(0,60,45,.9));transform:scale(.94)}
   .btn.on{background:radial-gradient(circle at 35% 30%,rgba(255,120,0,.9),rgba(90,30,0,.9));border-color:#fb6;color:#fff}
-  #bJump{right:24px;bottom:120px;width:78px;height:78px}
-  #bCrawl{right:118px;bottom:54px;width:70px;height:70px}
-  #bSearch{right:24px;bottom:30px;width:84px;height:84px;font-size:14px;color:#fff;border-color:#3ff;
-    background:radial-gradient(circle at 35% 30%,rgba(0,120,140,.7),rgba(0,40,55,.8))}
-  #bClimb{right:130px;bottom:140px;width:70px;height:70px;display:none}
+  #bJump{right:24px;bottom:118px;width:78px;height:78px}
+  #bCrawl{right:116px;bottom:50px;width:70px;height:70px}
+  #bClimb{right:120px;bottom:140px;width:70px;height:70px;display:none}
+  #bEnter{right:24px;bottom:30px;width:84px;height:84px;font-size:13px;color:#fff;border-color:#3ff;
+    background:radial-gradient(circle at 35% 30%,rgba(0,120,140,.8),rgba(0,40,55,.85));display:none}
   #pad{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.78)}
   #padbox{width:280px;max-width:88vw;padding:18px;border:2px solid #0ff;border-radius:10px;
     background:linear-gradient(160deg,#031,#010);box-shadow:0 0 40px rgba(0,255,200,.4)}
@@ -61,11 +61,14 @@
     text-align:center;background:radial-gradient(ellipse at center,#021410,#000);padding:24px}
   #start h1{font-size:34px;letter-spacing:6px;color:#0fc;text-shadow:0 0 20px #0f8;margin-bottom:4px}
   #start .sub{color:#6fd;letter-spacing:3px;opacity:.8;margin-bottom:20px;font-size:13px}
-  #start p{max-width:480px;color:#9fd;font-size:13px;line-height:1.7;opacity:.9;margin-bottom:8px}
+  #start p{max-width:500px;color:#9fd;font-size:13px;line-height:1.7;opacity:.9;margin-bottom:8px}
   #start .keys{color:#7fb;font-size:12px;opacity:.7;margin-top:14px;line-height:1.8}
   #startBtn{margin-top:24px;padding:16px 44px;font-size:18px;letter-spacing:3px;font-weight:bold;color:#001;
     background:linear-gradient(#0fd,#0a8);border:none;border-radius:8px;box-shadow:0 0 30px rgba(0,255,200,.6);cursor:pointer}
   #startBtn:active{transform:scale(.96)}
+  #fade{position:fixed;inset:0;z-index:25;background:#000;opacity:0;pointer-events:none;
+    transition:opacity .45s ease;display:flex;align-items:center;justify-content:center;
+    color:#0fc;font-size:26px;letter-spacing:6px;text-shadow:0 0 20px #0f8}
   .hide{display:none!important}
 </style>
 </head>
@@ -73,8 +76,8 @@
 <canvas id="cv"></canvas>
 <div id="crt"></div>
 <div id="hud">
-  <div id="topbar"><div class="room" id="roomLbl">ROOM 01</div><div class="obj">// locate the 4-digit access code</div></div>
-  <div id="codebox"><div class="lbl">ACCESS CODE</div><div class="val" id="codeVal">????</div></div>
+  <div id="topbar"><div class="room" id="roomLbl">ROOM 01</div><div class="obj">// find 4 hidden digits printed around the room</div></div>
+  <div id="codebox"><div class="lbl">ACCESS CODE</div><div class="val" id="codeVal">_ _ _ _</div></div>
   <div id="crosshair"></div>
   <div id="prompt"></div>
   <div id="toast"></div>
@@ -85,7 +88,7 @@
   <div class="btn" id="bClimb">CLIMB</div>
   <div class="btn" id="bJump">JUMP</div>
   <div class="btn" id="bCrawl">CRAWL</div>
-  <div class="btn" id="bSearch">SEARCH</div>
+  <div class="btn" id="bEnter">ENTER<br>CODE</div>
 </div>
 <div id="pad"><div id="padbox"><h3>// DOOR LOCK</h3><div id="padDisp">____</div>
   <div id="padgrid">
@@ -94,13 +97,14 @@
     <div class="key" data-k="7">7</div><div class="key" data-k="8">8</div><div class="key" data-k="9">9</div>
     <div class="key fn" data-k="C">CLR</div><div class="key" data-k="0">0</div><div class="key fn" data-k="E">ENT</div>
   </div></div></div>
+<div id="fade"></div>
 <div id="start">
   <h1>SECTOR</h1><div class="sub">INFINITE ESCAPE PROTOCOL · 3D</div>
-  <p>You wake locked in a decaying sector cell built from real, solid structures. A 4-digit access code is hidden somewhere — taped under a bed, stashed inside a locker, or stuck on top of a tall shelf.</p>
-  <p><b>Search</b> the furniture. <b>Crawl</b> to look underneath. <b>Climb the ladder</b> or <b>jump</b> to reach what's hidden up high. Find the code, enter it at the door, descend deeper. Forever.</p>
+  <p>You wake locked in a cluttered, decaying sector cell. The 4-digit door code is <b>split into four single digits</b>, each printed tiny and faint on a piece of furniture in a different corner of the room.</p>
+  <p>Walk up to dressers, lockers and cabinets — <b>look at them and the drawers/doors slide open by themselves</b>. <b>Crawl</b> to read what's tucked underneath, <b>climb</b> to reach high shelves. Spot all four digits, then enter the code at the door.</p>
   <div class="keys">
-    DESKTOP&nbsp; WASD move · MOUSE look (click to lock) · SPACE jump · C crawl · E search · ladder: stand on it + SPACE<br>
-    MOBILE&nbsp;&nbsp; left stick move · drag right to look · JUMP / CRAWL / CLIMB / SEARCH buttons
+    DESKTOP&nbsp; WASD move · MOUSE look (click to connect) · SPACE jump · C crawl · E door · ladder: stand on it + SPACE<br>
+    MOBILE&nbsp;&nbsp; left stick move · drag right to look · JUMP / CRAWL / CLIMB buttons · drawers open on their own
   </div>
   <button id="startBtn">ENTER THE SECTOR</button>
 </div>
@@ -108,323 +112,376 @@
 <script>
 "use strict";
 //==================================================================
-// SECTOR 3D — real polygon engine, real furniture structures
+// SECTOR 3D — polygon engine, openable furniture, printed code digits
 //==================================================================
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d',{alpha:false});
-let RW=0,RH=0,HALF=0,HALFY=0,FOCAL=0,DPR=1;
-const FOV=78*Math.PI/180, ZNEAR=0.06;
-const CS=3.2;            // cell size (meters)
-const ROOM_H=3.0;        // ceiling height
+let RW=0,RH=0,HALF=0,HALFY=0,FOCAL=0;
+const FOV=80*Math.PI/180, ZNEAR=0.06;
+const CS=3.4;             // cell size (m)
+const ROOM_H=4.6;         // tall ceiling
 function resize(){
-  DPR=Math.min(2, window.devicePixelRatio||1);
-  const w=window.innerWidth, h=window.innerHeight;
-  // render at reduced internal res for perf
-  const scale = (w*h>900000)?0.62:0.85;
-  RW=Math.round(w*scale); RH=Math.round(h*scale);
-  cv.width=RW; cv.height=RH; HALF=RW/2; HALFY=RH/2;
-  FOCAL=(RW/2)/Math.tan(FOV/2);
+  const w=window.innerWidth,h=window.innerHeight;
+  const scale=(w*h>900000)?0.6:0.82;
+  RW=Math.round(w*scale);RH=Math.round(h*scale);
+  cv.width=RW;cv.height=RH;HALF=RW/2;HALFY=RH/2;FOCAL=(RW/2)/Math.tan(FOV/2);
 }
-window.addEventListener('resize',resize); resize();
+window.addEventListener('resize',resize);resize();
 
-//---------------- math / util
+//---------------- util
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function hsl2rgb(h,s,l){h=((h%360)+360)%360/360;let r,g,b;if(s===0){r=g=b=l;}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;const f=(t)=>{t<0&&(t+=1);t>1&&(t-=1);if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};r=f(h+1/3);g=f(h);b=f(h-1/3);}return [r*255|0,g*255|0,b*255|0];}
 function jit(c,r,n){return [clamp(c[0]+(r()*2-1)*n,0,255),clamp(c[1]+(r()*2-1)*n,0,255),clamp(c[2]+(r()*2-1)*n,0,255)];}
+function d2(c){return [clamp(c[0]-30,0,255),clamp(c[1]-30,0,255),clamp(c[2]-30,0,255)];}
 
-//---------------- furniture catalog (footprint meters, height meters, hide-postures)
+//---------------- catalog: footprint (m), height (m), openable kind, hosts-digit
 const CAT={
-  closet:{fw:1.2,fh:0.7,h:2.1,hide:['in','top'],name:'closet'},
-  locker:{fw:0.95,fh:0.7,h:2.0,hide:['in','top'],name:'locker'},
-  shelf:{fw:1.25,fh:0.5,h:2.05,hide:['top','in'],name:'shelf'},
-  fridge:{fw:0.95,fh:0.85,h:1.9,hide:['in','top'],name:'refrigerator'},
-  dresser:{fw:1.35,fh:0.6,h:1.1,hide:['in','under','top'],name:'dresser'},
-  bed:{fw:2.0,fh:1.4,h:0.62,hide:['under'],name:'bed'},
-  table:{fw:1.5,fh:0.95,h:0.95,hide:['under','top'],name:'table'},
-  crate:{fw:0.95,fh:0.95,h:0.95,hide:['in','top'],name:'crate'},
-  barrel:{fw:0.85,fh:0.85,h:1.1,hide:['top'],name:'barrel'},
-  tv:{fw:1.4,fh:0.55,h:1.35,hide:['top'],name:'TV unit'},
-  terminal:{fw:1.2,fh:0.75,h:1.25,hide:['in'],name:'terminal'},
-  toilet:{fw:0.75,fh:0.95,h:0.95,hide:[],name:'toilet'},
-  sink:{fw:1.05,fh:0.55,h:1.25,hide:[],name:'sink'},
-  ladder:{fw:0.8,fh:0.4,h:2.75,hide:[],name:'ladder',solid:0},
+  closet:{fw:1.5,fh:0.85,h:3.0,open:'doors2',name:'closet'},
+  locker:{fw:1.15,fh:0.8,h:2.7,open:'door1',name:'locker'},
+  shelf:{fw:1.7,fh:0.6,h:2.85,open:0,name:'shelf'},
+  fridge:{fw:1.15,fh:1.0,h:2.5,open:'door1',name:'refrigerator'},
+  dresser:{fw:1.7,fh:0.8,h:1.5,open:'drawers3',name:'dresser'},
+  bed:{fw:2.5,fh:1.8,h:0.75,open:0,name:'bed'},
+  table:{fw:1.9,fh:1.2,h:1.05,open:0,name:'table'},
+  crate:{fw:1.25,fh:1.25,h:1.25,open:'lid',name:'crate'},
+  barrel:{fw:1.0,fh:1.0,h:1.45,open:0,name:'barrel'},
+  tv:{fw:1.8,fh:0.6,h:1.7,open:0,name:'TV unit'},
+  terminal:{fw:1.5,fh:0.9,h:1.55,open:0,name:'terminal'},
+  toilet:{fw:0.85,fh:1.1,h:1.0,open:0,name:'toilet'},
+  sink:{fw:1.2,fh:0.65,h:1.4,open:'door1',name:'sink cabinet'},
+  ladder:{fw:0.9,fh:0.45,h:4.0,open:0,name:'ladder',solid:0},
 };
 
-//---------------- quad helpers (world space)
-// quad: {p:[[x,y,z]x4], col:[r,g,b], n:[..], c:[..centroid], kind, emis}
-function quad(out,pts,col,nhint,kind,emis){
-  // centroid
+//---------------- quad / box builders (local space). part = index into parts[]
+function pushQuad(out,pts,col,nhint,kind,emis,part){
   let cx=0,cy=0,cz=0;for(const q of pts){cx+=q[0];cy+=q[1];cz+=q[2];}cx/=4;cy/=4;cz/=4;
-  // normal
   const ax=pts[1][0]-pts[0][0],ay=pts[1][1]-pts[0][1],az=pts[1][2]-pts[0][2];
   const bx=pts[2][0]-pts[0][0],by=pts[2][1]-pts[0][1],bz=pts[2][2]-pts[0][2];
-  let nx=ay*bz-az*by, ny=az*bx-ax*bz, nz=ax*by-ay*bx;
-  const ln=Math.hypot(nx,ny,nz)||1; nx/=ln;ny/=ln;nz/=ln;
+  let nx=ay*bz-az*by,ny=az*bx-ax*bz,nz=ax*by-ay*bx;const ln=Math.hypot(nx,ny,nz)||1;nx/=ln;ny/=ln;nz/=ln;
   if(nx*nhint[0]+ny*nhint[1]+nz*nhint[2]<0){nx=-nx;ny=-ny;nz=-nz;pts=[pts[0],pts[3],pts[2],pts[1]];}
-  out.push({p:pts,col,n:[nx,ny,nz],c:[cx,cy,cz],kind:kind||'furn',emis:emis||0});
+  out.push({p:pts,col,n:[nx,ny,nz],c:[cx,cy,cz],kind:kind||'furn',emis:emis||0,part:part==null?-1:part});
 }
-// axis-aligned box from min/max
-function box(out,x0,y0,z0,x1,y1,z1,col,r,kind){
-  const C=[(x0+x1)/2,(y0+y1)/2,(z0+z1)/2];
+function bx(out,x0,y0,z0,x1,y1,z1,col,r,kind,part){
   const t=(p)=>[clamp(p[0]+18,0,255),clamp(p[1]+18,0,255),clamp(p[2]+18,0,255)];
-  const d=(p)=>[clamp(p[0]-22,0,255),clamp(p[1]-22,0,255),clamp(p[2]-22,0,255)];
   const cc=()=>r?jit(col,r,8):col;
-  // top (+z)
-  quad(out,[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],t(cc()),[0,0,1],kind);
-  // bottom (-z)
-  quad(out,[[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0]],d(cc()),[0,0,-1],kind);
-  // +x
-  quad(out,[[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1]],cc(),[1,0,0],kind);
-  // -x
-  quad(out,[[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],[x0,y0,z1]],cc(),[-1,0,0],kind);
-  // +y
-  quad(out,[[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],cc(),[0,1,0],kind);
-  // -y
-  quad(out,[[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]],cc(),[0,-1,0],kind);
+  pushQuad(out,[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],t(cc()),[0,0,1],kind,0,part);
+  pushQuad(out,[[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0]],d2(cc()),[0,0,-1],kind,0,part);
+  pushQuad(out,[[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1]],cc(),[1,0,0],kind,0,part);
+  pushQuad(out,[[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],[x0,y0,z1]],cc(),[-1,0,0],kind,0,part);
+  pushQuad(out,[[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],cc(),[0,1,0],kind,0,part);
+  pushQuad(out,[[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]],cc(),[0,-1,0],kind,0,part);
 }
-function prism(out,cx,cy,r0,z0,z1,sides,col,rng){
+function prismMesh(out,cx,cy,r0,z0,z1,sides,col,rng){
   const top=[],bot=[];
-  for(let i=0;i<sides;i++){const a=i/sides*Math.PI*2;top.push([cx+Math.cos(a)*r0,cy+Math.sin(a)*r0,z1]);bot.push([cx+Math.cos(a)*r0,cy+Math.sin(a)*r0,z0]);}
-  quad(out,[top[0],top[1],top[2],top[3]],col,[0,0,1],'furn'); // partial top (approx) — full fan below
-  // full top fan as quads pairs
-  for(let i=1;i<sides-1;i++){quad(out,[top[0],top[i],top[i+1],top[0]],[clamp(col[0]+20,0,255),clamp(col[1]+20,0,255),clamp(col[2]+20,0,255)],[0,0,1],'furn');}
-  for(let i=0;i<sides;i++){const j=(i+1)%sides;quad(out,[bot[i],bot[j],top[j],top[i]], rng?jit(col,rng,10):col,[Math.cos((i+.5)/sides*6.283),Math.sin((i+.5)/sides*6.283),0],'furn');}
+  for(let i=0;i<sides;i++){const a=i/sides*6.2832;top.push([cx+Math.cos(a)*r0,cy+Math.sin(a)*r0,z1]);bot.push([cx+Math.cos(a)*r0,cy+Math.sin(a)*r0,z0]);}
+  for(let i=1;i<sides-1;i++)pushQuad(out,[top[0],top[i],top[i+1],top[0]],[clamp(col[0]+20,0,255),clamp(col[1]+20,0,255),clamp(col[2]+20,0,255)],[0,0,1],'furn');
+  for(let i=0;i<sides;i++){const j=(i+1)%sides;pushQuad(out,[bot[i],bot[j],top[j],top[i]],rng?jit(col,rng,10):col,[Math.cos((i+.5)/sides*6.2832),Math.sin((i+.5)/sides*6.2832),0],'furn');}
 }
 
-//---------------- furniture mesh (local coords, centered at 0,0, base z=0)
+//---------------- furniture: returns {quads, parts, mounts}
+// parts[i] = {slide:[lx,ly,lz], dist, band:[z0,z1], openAmt:0, target:0}
+// mounts[i] = {part:idx|-1, panel:[TL,TR,BR,BL local], faint:bool, where:'low'|'high'|'mid'}
 function meshFurn(type,pal,r){
-  const out=[]; const D=CAT[type];
-  const baseH=pal.accHue+(r()*120-60);
-  const main=hsl2rgb(baseH,.45+r()*.3,.34+r()*.18);
-  const wood=hsl2rgb(28+r()*16,.5,.32);
-  const metal=pal.metal, white=[210,214,220];
-  const hx=D.fw/2, hy=D.fh/2, H=D.h;
-  const acc=pal.accent;
+  const out=[],parts=[],mounts=[];const D=CAT[type];
+  const bh=pal.accHue+(r()*120-60);
+  const main=hsl2rgb(bh,.45+r()*.3,.34+r()*.16), wood=hsl2rgb(28+r()*16,.5,.32);
+  const metal=pal.metal, white=[210,214,220], acc=pal.accent;
+  const hx=D.fw/2,hy=D.fh/2,H=D.h;
+  // small digit panel on +Y (front) face at z-center cz, half-size s
+  const frontPanel=(cz,s,faint,where)=>{const y=hy+0.012;mounts.push({part:-1,faint:faint,where:where||'mid',
+    panel:[[-s,y,cz+s],[s,y,cz+s],[s,y,cz-s],[-s,y,cz-s]]});};
+  const sidePanel=(cz,s,faint,where)=>{const x=hx+0.012;mounts.push({part:-1,faint:faint,where:where||'mid',
+    panel:[[x,-s,cz+s],[x,s,cz+s],[x,s,cz-s],[x,-s,cz-s]]});};
+  const underPanel=(s)=>{const z=0.02;mounts.push({part:-1,faint:true,where:'low',
+    panel:[[-s,-s,z],[s,-s,z],[s,s,z],[-s,s,z]]});}; // faces down-ish (drawn anyway)
+  const topPanel=(s)=>{const z=H+0.012;mounts.push({part:-1,faint:false,where:'high',
+    panel:[[-s,-s,z],[s,-s,z],[s,s,z],[-s,s,z]]});};
+
   switch(type){
-    case 'closet':
-      box(out,-hx,-hy,0,hx,hy,H,main,r);
-      // doors (inset front face)
-      box(out,-hx+.04,hy-.03,.05,-.02,hy+.02,H-.05,hsl2rgb(baseH,.45,.27),r);
-      box(out,.02,hy-.03,.05,hx-.04,hy+.02,H-.05,hsl2rgb(baseH,.45,.30),r);
-      box(out,-.10,hy,H*.5-.1,-.06,hy+.06,H*.5+.1,metal); // handles
-      box(out,.06,hy,H*.5-.1,.10,hy+.06,H*.5+.1,metal); break;
-    case 'locker':
-      box(out,-hx,-hy,0,hx,hy,H,hsl2rgb(baseH,.3,.4),r);
-      for(let i=0;i<6;i++){box(out,-hx+.1,hy,.3+i*((H-.6)/6),hx-.1,hy+.02,.32+i*((H-.6)/6),[20,24,26]);} // vents
-      box(out,hx-.12,hy,H*.45,hx-.08,hy+.05,H*.55,metal); break;
-    case 'shelf':{
-      box(out,-hx,-hy,0,hx,hy,H,[28,26,30],r); // back/frame
-      const lv=4;for(let i=0;i<=lv;i++){const z=i*(H-.06)/lv;box(out,-hx+.03,-hy+.03,z,hx-.03,hy,z+.05,main);} // slabs
-      for(let i=0;i<10;i++){const sh=.15+r()*.35,lvl=(r()*lv)|0,z=lvl*(H-.06)/lv+.05;const ix=-hx+.1+r()*(D.fw-.3),iy=-hy+.1+r()*(D.fh-.25);box(out,ix,iy,z,ix+.12+r()*.12,iy+.12,z+sh,hsl2rgb(r()*360,.6,.45));}
+    case 'closet':{
+      bx(out,-hx,-hy,0,hx,hy,H,main,r);
+      const p=parts.length;parts.push({slide:[-1,0,0],dist:hx*0.42,band:[0,H],openAmt:0,target:0}); // left door
+      const p2=parts.length;parts.push({slide:[1,0,0],dist:hx*0.42,band:[0,H],openAmt:0,target:0}); // right door
+      bx(out,-hx+.04,hy-.04,.06,-.01,hy+.02,H-.06,hsl2rgb(bh,.45,.27),r,'furn',p);
+      bx(out,.01,hy-.04,.06,hx-.04,hy+.02,H-.06,hsl2rgb(bh,.45,.30),r,'furn',p2);
+      bx(out,-.12,hy,H*.5-.12,-.07,hy+.06,H*.5+.12,metal,null,'furn',p);
+      bx(out,.07,hy,H*.5-.12,.12,hy+.06,H*.5+.12,metal,null,'furn',p2);
+      // digit inside (revealed when doors open) — panel just behind doors
+      mounts.push({part:p,faint:false,where:'mid',panel:[[-.3,hy-.06,H*.55+.18],[.3,hy-.06,H*.55+.18],[.3,hy-.06,H*.55-.18],[-.3,hy-.06,H*.55-.18]]});
       break;}
-    case 'fridge':
-      box(out,-hx,-hy,0,hx,hy,H,hsl2rgb(baseH,.12,.7),r);
-      box(out,-hx,hy,H*.62,hx,hy+.015,H*.63,[40,40,44]); // freezer split
-      box(out,hx-.1,hy,H*.2,hx-.06,hy+.06,H*.5,metal);
-      box(out,hx-.1,hy,H*.68,hx-.06,hy+.06,H*.85,metal); break;
+    case 'locker':{
+      bx(out,-hx,-hy,0,hx,hy,H,hsl2rgb(bh,.3,.4),r);
+      const p=parts.length;parts.push({slide:[1,0,0],dist:hx*0.85,band:[0,H],openAmt:0,target:0});
+      bx(out,-hx+.04,hy-.03,.05,hx-.04,hy+.02,H-.05,hsl2rgb(bh,.32,.34),r,'furn',p);
+      for(let i=0;i<7;i++)bx(out,-hx+.1,hy+.005,.3+i*((H-.6)/7),hx-.1,hy+.025,.32+i*((H-.6)/7),[20,24,26],null,'furn',p);
+      mounts.push({part:p,faint:false,where:'mid',panel:[[-.22,hy-.06,H*.55+.16],[.22,hy-.06,H*.55+.16],[.22,hy-.06,H*.55-.16],[-.22,hy-.06,H*.55-.16]]});
+      break;}
+    case 'shelf':{
+      bx(out,-hx,-hy,0,hx,hy,H,[28,26,30],r);
+      const lv=5;for(let i=0;i<=lv;i++){const z=i*(H-.06)/lv;bx(out,-hx+.03,-hy+.03,z,hx-.03,hy,z+.05,main);}
+      for(let i=0;i<14;i++){const sh=.18+r()*.45,lvl=(r()*lv)|0,z=lvl*(H-.06)/lv+.05;const ix=-hx+.12+r()*(D.fw-.34),iy=-hy+.1+r()*(D.fh-.25);bx(out,ix,iy,z,ix+.14+r()*.14,iy+.14,z+sh,hsl2rgb(r()*360,.6,.45));}
+      topPanel(.13); break;}
+    case 'fridge':{
+      bx(out,-hx,-hy,0,hx,hy,H,hsl2rgb(bh,.12,.7),r);
+      const p=parts.length;parts.push({slide:[1,0,0],dist:hx*0.8,band:[0,H*.6],openAmt:0,target:0});
+      const p2=parts.length;parts.push({slide:[1,0,0],dist:hx*0.8,band:[H*.6,H],openAmt:0,target:0});
+      bx(out,-hx+.03,hy-.03,.05,hx-.03,hy+.02,H*.6-.02,hsl2rgb(bh,.1,.66),r,'furn',p);
+      bx(out,-hx+.03,hy-.03,H*.6+.02,hx-.03,hy+.02,H-.05,hsl2rgb(bh,.1,.68),r,'furn',p2);
+      bx(out,hx-.12,hy,H*.2,hx-.08,hy+.06,H*.5,metal,null,'furn',p);
+      bx(out,hx-.12,hy,H*.7,hx-.08,hy+.06,H*.85,metal,null,'furn',p2);
+      mounts.push({part:p,faint:false,where:'low',panel:[[-.2,hy-.06,H*.3+.14],[.2,hy-.06,H*.3+.14],[.2,hy-.06,H*.3-.14],[-.2,hy-.06,H*.3-.14]]});
+      break;}
     case 'dresser':{
-      box(out,-hx,-hy,0,hx,hy,H,main,r);
-      for(let i=0;i<3;i++){const z=.06+i*(H-.1)/3;box(out,-hx+.05,hy-.02,z,hx-.05,hy+.03,z+(H-.18)/3,hsl2rgb(baseH,.45,.26));box(out,-.08,hy+.02,z+(H-.18)/6-.02,.08,hy+.07,z+(H-.18)/6+.02,metal);}
+      bx(out,-hx,-hy,0,hx,hy,H,main,r);
+      for(let i=0;i<3;i++){const z0=.06+i*(H-.1)/3,z1=z0+(H-.18)/3;
+        const p=parts.length;parts.push({slide:[0,1,0],dist:0.55,band:[z0,z1],openAmt:0,target:0});
+        bx(out,-hx+.05,hy-.06,z0,hx-.05,hy+.02,z1,hsl2rgb(bh,.45,.26),r,'furn',p);
+        bx(out,-.1,hy+.02,(z0+z1)/2-.02,.1,hy+.07,(z0+z1)/2+.02,metal,null,'furn',p);
+        // each drawer can hold a digit (revealed when that drawer opens)
+        mounts.push({part:p,faint:false,where:'mid',drawer:i,panel:[[-.13,hy-.30,(z0+z1)/2+.10],[.13,hy-.30,(z0+z1)/2+.10],[.13,hy-.30,(z0+z1)/2-.10],[-.13,hy-.30,(z0+z1)/2-.10]]});
+      }
       break;}
     case 'bed':{
-      box(out,-hx,-hy,0,hx,hy,H*.45,wood,r); // frame
-      box(out,-hx+.06,-hy+.06,H*.45,hx-.06,hy-.06,H,hsl2rgb(baseH,.5,.45),r); // mattress
-      box(out,-hx+.1,-hy+.12,H,-hx+.7,hy-.12,H+.12,hsl2rgb(baseH+30,.5,.6)); // pillow
-      box(out,-hx,-hy,0,-hx+.08,-hy+.08,H*.45,d2(wood)); break;}
-    case 'table':
-      box(out,-hx,-hy,H-.08,hx,hy,H,main,r); // top
-      box(out,-hx+.06,-hy+.06,0,-hx+.14,-hy+.14,H-.08,wood);
-      box(out,hx-.14,-hy+.06,0,hx-.06,-hy+.14,H-.08,wood);
-      box(out,-hx+.06,hy-.14,0,-hx+.14,hy-.06,H-.08,wood);
-      box(out,hx-.14,hy-.14,0,hx-.06,hy-.06,H-.08,wood);
-      for(let i=0;i<3;i++){const ix=-hx+.3+r()*(D.fw-.6);box(out,ix,-.1,H,ix+.14,.1,H+.1+r()*.2,hsl2rgb(r()*360,.6,.5));}
-      break;
-    case 'crate':
-      box(out,-hx,-hy,0,hx,hy,H,pal.rust,r);
-      box(out,-hx,-hy,H-.04,hx,hy,H,d2(pal.rust)); // lid lip
-      box(out,-hx,hy-.02,0,hx,hy,H,d2(pal.rust)); // front band darker
-      box(out,-hx+.05,hy,H*.4,hx-.05,hy+.02,H*.55,acc); break;
-    case 'barrel':
-      prism(out,0,0,hx*.9,0,H,8,hsl2rgb(baseH,.6,.4),r);
-      prism(out,0,0,hx*.92,H*.25,H*.3,8,[20,20,20]);
-      prism(out,0,0,hx*.92,H*.7,H*.75,8,[20,20,20]); break;
-    case 'tv':
-      box(out,-hx*.5,-hy,0,hx*.5,hy,H*.45,[28,28,32],r); // stand
-      box(out,-hx,-hy,H*.45,hx,hy*.6,H,[12,12,14]); // screen body
-      quad(out,[[-hx+.05,hy*.6,H*.45+.05],[hx-.05,hy*.6,H*.45+.05],[hx-.05,hy*.6,H-.05],[-hx+.05,hy*.6,H-.05]],pal.glow,[0,1,0],'furn',1); // emissive screen
-      break;
-    case 'terminal':
-      box(out,-hx,-hy,0,hx,hy,H*.5,[30,30,36],r); // desk
-      box(out,-hx*.6,-hy*.4,H*.5,hx*.6,hy*.2,H,[10,12,14]); // monitor
-      quad(out,[[-hx*.55,hy*.2,H*.55],[hx*.55,hy*.2,H*.55],[hx*.55,hy*.2,H-.05],[-hx*.55,hy*.2,H-.05]],[40,255,160],[0,1,0],'furn',1);
-      break;
-    case 'toilet':
-      box(out,-hx,hy-.25,0,hx,hy,H,white,r); // tank
-      box(out,-hx*.7,-hy,0,hx*.7,hy-.25,H*.55,white); // bowl
-      box(out,-hx*.6,-hy+.05,H*.55,hx*.6,hy-.3,H*.62,[180,184,190]); break;
-    case 'sink':
-      box(out,-hx,-hy,H*.4,hx,hy,H*.55,white,r); // counter
-      box(out,-hx*.45,-hy+.05,H*.4-.18,hx*.45,hy-.05,H*.4,[170,174,180]); // basin
-      box(out,-hx+.06,hy-.05,0,-hx+.12,hy,H*.4,metal); box(out,hx-.12,hy-.05,0,hx-.06,hy,H*.4,metal);
-      box(out,-hx*.7,hy-.04,H*.62,hx*.7,hy,H,hsl2rgb(200,.2,.5)); // mirror frame
-      quad(out,[[-hx*.65,hy-.03,H*.66],[hx*.65,hy-.03,H*.66],[hx*.65,hy-.03,H-.04],[-hx*.65,hy-.03,H-.04]],[120,150,160],[0,1,0],'furn',1);
-      break;
-    case 'ladder':{
-      box(out,-hx*.6,-hy,0,-hx*.6+.06,hy,H,metal); box(out,hx*.6-.06,-hy,0,hx*.6,hy,H,metal);
-      for(let i=0;i<9;i++){const z=.2+i*(H-.4)/8;box(out,-hx*.6,-.04,z,hx*.6,.04,z+.05,hsl2rgb(baseH,.3,.45));}
+      bx(out,-hx,-hy,0,hx,hy,H*.45,wood,r);
+      bx(out,-hx+.07,-hy+.07,H*.45,hx-.07,hy-.07,H,hsl2rgb(bh,.5,.45),r);
+      bx(out,-hx+.12,-hy+.14,H,-hx+.85,hy-.14,H+.14,hsl2rgb(bh+30,.5,.6));
+      bx(out,-hx,-hy,0,-hx+.1,-hy+.1,H*.45,d2(wood));bx(out,hx-.1,-hy,0,hx,-hy+.1,H*.45,d2(wood));
+      underPanel(.12); break;} // digit taped under the bed — crawl to see
+    case 'table':{
+      bx(out,-hx,-hy,H-.09,hx,hy,H,main,r);
+      bx(out,-hx+.06,-hy+.06,0,-hx+.16,-hy+.16,H-.09,wood);bx(out,hx-.16,-hy+.06,0,hx-.06,-hy+.16,H-.09,wood);
+      bx(out,-hx+.06,hy-.16,0,-hx+.16,hy-.06,H-.09,wood);bx(out,hx-.16,hy-.16,0,hx-.06,hy-.06,H-.09,wood);
+      for(let i=0;i<4;i++){const ix=-hx+.4+r()*(D.fw-.8);bx(out,ix,-.12,H,ix+.16,.12,H+.12+r()*.22,hsl2rgb(r()*360,.6,.5));}
+      underPanel(.11); break;}
+    case 'crate':{
+      bx(out,-hx,-hy,0,hx,hy,H,pal.rust,r);
+      const p=parts.length;parts.push({slide:[0,0,1],dist:0.4,band:[0,H],openAmt:0,target:0});
+      bx(out,-hx,-hy,H-.06,hx,hy,H,d2(pal.rust),null,'furn',p); // lid lifts
+      bx(out,-hx+.05,hy,H*.45,hx-.05,hy+.02,H*.6,acc);
+      mounts.push({part:p,faint:false,where:'mid',panel:[[-.16,-.0,H-.2],[.16,0,H-.2],[.16,0,H-.4],[-.16,0,H-.4]]});
       break;}
-    default: box(out,-hx,-hy,0,hx,hy,H,main,r);
+    case 'barrel':{
+      prismMesh(out,0,0,hx*.92,0,H,8,hsl2rgb(bh,.6,.4),r);
+      prismMesh(out,0,0,hx*.94,H*.25,H*.3,8,[20,20,20]);prismMesh(out,0,0,hx*.94,H*.7,H*.75,8,[20,20,20]);
+      sidePanel(H*.5,.12,true,'mid'); break;}
+    case 'tv':{
+      bx(out,-hx*.5,-hy,0,hx*.5,hy,H*.42,[28,28,32],r);
+      bx(out,-hx,-hy,H*.42,hx,hy*.6,H,[12,12,14]);
+      pushQuad(out,[[-hx+.05,hy*.6,H*.42+.05],[hx-.05,hy*.6,H*.42+.05],[hx-.05,hy*.6,H-.05],[-hx+.05,hy*.6,H-.05]],pal.glow,[0,1,0],'furn',1);
+      sidePanel(H*.2,.1,true,'low'); break;}
+    case 'terminal':{
+      bx(out,-hx,-hy,0,hx,hy,H*.5,[30,30,36],r);
+      bx(out,-hx*.6,-hy*.4,H*.5,hx*.6,hy*.2,H,[10,12,14]);
+      pushQuad(out,[[-hx*.55,hy*.2,H*.55],[hx*.55,hy*.2,H*.55],[hx*.55,hy*.2,H-.05],[-hx*.55,hy*.2,H-.05]],[40,255,160],[0,1,0],'furn',1);
+      frontPanel(H*.25,.1,true,'low'); break;}
+    case 'toilet':{
+      bx(out,-hx,hy-.28,0,hx,hy,H,white,r);bx(out,-hx*.7,-hy,0,hx*.7,hy-.28,H*.55,white);
+      bx(out,-hx*.6,-hy+.05,H*.55,hx*.6,hy-.32,H*.62,[180,184,190]);
+      sidePanel(H*.3,.09,true,'low'); break;}
+    case 'sink':{
+      bx(out,-hx,-hy,H*.4,hx,hy,H*.55,white,r);
+      bx(out,-hx*.45,-hy+.05,H*.4-.2,hx*.45,hy-.05,H*.4,[170,174,180]);
+      const p=parts.length;parts.push({slide:[1,0,0],dist:hx*0.7,band:[0,H*.4],openAmt:0,target:0});
+      bx(out,-hx+.04,hy-.02,.05,hx-.04,hy+.02,H*.4-.05,hsl2rgb(bh,.2,.45),r,'furn',p); // cabinet door
+      bx(out,-hx*.7,hy-.04,H*.62,hx*.7,hy,H,hsl2rgb(200,.2,.5));
+      pushQuad(out,[[-hx*.65,hy-.03,H*.66],[hx*.65,hy-.03,H*.66],[hx*.65,hy-.03,H-.04],[-hx*.65,hy-.03,H-.04]],[120,150,160],[0,1,0],'furn',1);
+      mounts.push({part:p,faint:false,where:'low',panel:[[-.13,hy-.06,H*.2+.1],[.13,hy-.06,H*.2+.1],[.13,hy-.06,H*.2-.1],[-.13,hy-.06,H*.2-.1]]});
+      break;}
+    case 'ladder':{
+      bx(out,-hx*.55,-hy,0,-hx*.55+.06,hy,H,metal);bx(out,hx*.55-.06,-hy,0,hx*.55,hy,H,metal);
+      for(let i=0;i<11;i++){const z=.2+i*(H-.4)/10;bx(out,-hx*.55,-.04,z,hx*.55,.04,z+.05,hsl2rgb(bh,.3,.45));}
+      break;}
+    default: bx(out,-hx,-hy,0,hx,hy,H,main,r);
   }
-  return out;
+  return {quads:out,parts,mounts};
 }
-function d2(c){return [clamp(c[0]-30,0,255),clamp(c[1]-30,0,255),clamp(c[2]-30,0,255)];}
 
 //---------------- palette
 function newPalette(seed){
-  const r=mulberry(seed), base=r()*360, scheme=(r()*4)|0;
-  let wH,fH,aH;
-  if(scheme===0){wH=base;fH=base+15;aH=base+150;}
-  else if(scheme===1){wH=base;fH=base+180;aH=base+90;}
-  else if(scheme===2){wH=base;fH=base+30;aH=base+200;}
-  else{wH=base;fH=base-40;aH=base+120;}
+  const r=mulberry(seed),base=r()*360,scheme=(r()*4)|0;let wH,fH,aH;
+  if(scheme===0){wH=base;fH=base+15;aH=base+150;}else if(scheme===1){wH=base;fH=base+180;aH=base+90;}
+  else if(scheme===2){wH=base;fH=base+30;aH=base+200;}else{wH=base;fH=base-40;aH=base+120;}
   return {r,wallHue:wH,accHue:aH,floorHue:fH,
-    wall:hsl2rgb(wH,.28,.30), wallDk:hsl2rgb(wH,.3,.18),
-    floorA:hsl2rgb(fH,.32,.20), floorB:hsl2rgb(fH,.36,.13),
-    ceil:hsl2rgb(wH,.2,.12), ceilLight:hsl2rgb(aH,.5,.6),
-    accent:hsl2rgb(aH,.85,.55), accent2:hsl2rgb(aH+40,.8,.6),
-    metal:hsl2rgb(wH+10,.1,.5), rust:hsl2rgb(28+r()*14,.55,.35), glow:hsl2rgb(aH,1,.6)};
+    wall:hsl2rgb(wH,.28,.30),wallDk:hsl2rgb(wH,.3,.18),wall2:hsl2rgb(wH+20,.3,.26),
+    floorA:hsl2rgb(fH,.32,.20),floorB:hsl2rgb(fH,.36,.13),
+    ceil:hsl2rgb(wH,.2,.12),ceilLight:hsl2rgb(aH,.5,.6),
+    accent:hsl2rgb(aH,.85,.55),accent2:hsl2rgb(aH+40,.8,.6),
+    metal:hsl2rgb(wH+10,.1,.5),rust:hsl2rgb(28+r()*14,.55,.35),glow:hsl2rgb(aH,1,.6)};
 }
 
-//---------------- build room + scene
-let G, started=false;
+//---------------- build room
+let G,started=false;
+function rotV(v,c,s){return [v[0]*c-v[1]*s, v[0]*s+v[1]*c, v[2]];}
 function buildRoom(level){
   const seed=((level*2654435761)>>>0)^((Math.random()*1e9)|0);
-  const pal=newPalette(seed), R=mulberry(seed^0x9e37);
-  const N=clamp(8+((R()*3)|0)+Math.min(3,(level/3)|0),8,12); // grid incl. border
-  // interior cells 1..N-2
-  const x0=CS, y0=CS, x1=(N-1)*CS, y1=(N-1)*CS;
-  // door on a wall panel
-  const side=(R()*4)|0; const idx=1+((R()*(N-2))|0);
+  const pal=newPalette(seed),R=mulberry(seed^0x9e37);
+  const N=clamp(9+((R()*3)|0)+Math.min(3,(level/3)|0),9,13);
+  const x0=CS,y0=CS,x1=(N-1)*CS,y1=(N-1)*CS,cxC=(x0+x1)/2,cyC=(y0+y1)/2;
+  const side=(R()*4)|0, idx=1+((R()*(N-2))|0), mid=(i)=>(i+0.5)*CS;
   let door;
-  const mid=(i)=>(i+0.5)*CS;
-  if(side===0) door={x:mid(idx),y:y0,nx:0,ny:1,wall:'S'};
-  else if(side===1) door={x:mid(idx),y:y1,nx:0,ny:-1,wall:'N'};
-  else if(side===2) door={x:x0,y:mid(idx),nx:1,ny:0,wall:'W'};
-  else door={x:x1,y:mid(idx),nx:-1,ny:0,wall:'E'};
+  if(side===0)door={x:mid(idx),y:y0,nx:0,ny:1};else if(side===1)door={x:mid(idx),y:y1,nx:0,ny:-1};
+  else if(side===2)door={x:x0,y:mid(idx),nx:1,ny:0};else door={x:x1,y:mid(idx),nx:-1,ny:0};
 
-  // place furniture in interior cells
-  const occ={}, furn=[];
-  const cxC=(x0+x1)/2, cyC=(y0+y1)/2;
-  const spawn={x:cxC,y:cyC,a:R()*6.283};
-  occ[((cxC/CS)|0)+','+((cyC/CS)|0)]=1;
+  const occ={},furn=[],walls=[];
+  const spawn={x:cxC,y:cyC,a:R()*6.283};occ[((cxC/CS)|0)+','+((cyC/CS)|0)]=1;
+
+  // interior partition walls (collision + geometry), leaving gaps
+  function addPartition(){
+    const horiz=R()<0.5;
+    const line=2+((R()*(N-4))|0); // cell index
+    const start=2+((R()*2)|0), len=2+((R()*(N-6))|0);
+    const th=0.25;
+    for(let k=0;k<len;k++){
+      const c=start+k; if(c>=N-2) break;
+      // leave random gaps
+      if(R()<0.32) continue;
+      let ax,ay,bx2,by2;
+      if(horiz){ax=c*CS;bx2=(c+1)*CS;ay=line*CS-th/2;by2=line*CS+th/2;}
+      else{ay=c*CS;by2=(c+1)*CS;ax=line*CS-th/2;bx2=line*CS+th/2;}
+      // skip near spawn/door
+      const mxx=(ax+bx2)/2,myy=(ay+by2)/2;
+      if(Math.hypot(mxx-spawn.x,myy-spawn.y)<CS*1.4)continue;
+      if(Math.hypot(mxx-door.x,myy-door.y)<CS*1.6)continue;
+      walls.push({x0:Math.min(ax,bx2),x1:Math.max(ax,bx2),y0:Math.min(ay,by2),y1:Math.max(ay,by2)});
+      const c1=jit(pal.wall2,R,8);
+      bx(WALLQ,Math.min(ax,bx2),Math.min(ay,by2),0,Math.max(ax,bx2),Math.max(ay,by2),ROOM_H*0.78,c1,R,'wall');
+      // mark cell occupied so furniture doesn't spawn in wall
+      occ[(((mxx)/CS)|0)+','+(((myy)/CS)|0)]=1;
+    }
+  }
+  const WALLQ=[];
+  const nPart=1+((R()*2)|0);for(let i=0;i<nPart;i++)addPartition();
+
   const types=['closet','locker','shelf','fridge','dresser','bed','table','crate','barrel','tv','terminal','toilet','sink'];
   function freeCell(){
-    for(let k=0;k<80;k++){
-      const cx=1+((R()*(N-2))|0), cy=1+((R()*(N-2))|0), key=cx+','+cy;
-      if(occ[key])continue;
-      const wx=(cx+0.5)*CS, wy=(cy+0.5)*CS;
-      if(Math.hypot(wx-spawn.x,wy-spawn.y)<CS*1.2)continue;
+    for(let k=0;k<90;k++){const cx=1+((R()*(N-2))|0),cy=1+((R()*(N-2))|0),key=cx+','+cy;if(occ[key])continue;
+      const wx=(cx+0.5)*CS,wy=(cy+0.5)*CS;
+      if(Math.hypot(wx-spawn.x,wy-spawn.y)<CS*1.1)continue;
       if(Math.hypot(wx-door.x,wy-door.y)<CS*1.3)continue;
-      occ[key]=1;return {wx,wy};
-    }return null;
-  }
+      // not inside a partition AABB
+      let bad=false;for(const w of walls){if(wx>w.x0-0.6&&wx<w.x1+0.6&&wy>w.y0-0.6&&wy<w.y1+0.6){bad=true;break;}}if(bad)continue;
+      occ[key]=1;return {wx,wy,cx,cy};}
+    return null;}
   function place(type,cell){
-    const rot=(R()*4|0)*Math.PI/2;
-    const mesh=meshFurn(type,pal,R);
-    const ca=Math.cos(rot),sa=Math.sin(rot);
-    const quads=mesh.map(q=>({...q,
-      p:q.p.map(pt=>[cell.wx+pt[0]*ca-pt[1]*sa, cell.wy+pt[0]*sa+pt[1]*ca, pt[2]]),
-      n:[q.n[0]*ca-q.n[1]*sa, q.n[0]*sa+q.n[1]*ca, q.n[2]]}));
-    for(const q of quads){let cx=0,cy=0,cz=0;for(const pp of q.p){cx+=pp[0];cy+=pp[1];cz+=pp[2];}q.c=[cx/4,cy/4,cz/4];}
-    const D=CAT[type];
-    let ex=D.fw/2, ey=D.fh/2; if(Math.abs(Math.sin(rot))>0.5){const t=ex;ex=ey;ey=t;}
-    furn.push({type,x:cell.wx,y:cell.wy,ex,ey,h:D.h,solid:D.solid!==0,quads,isHide:false,posture:null});
-  }
-  const lc=freeCell(); if(lc) place('ladder',lc);
-  const count=clamp(7+((R()*5)|0)+((level/2)|0),7,12);
-  for(let i=0;i<count;i++){const c=freeCell();if(!c)break;place(types[(R()*types.length)|0],c);}
-
-  // hide spot
-  const hidable=furn.filter(f=>CAT[f.type].hide.length>0);
-  let hideSpot=null,posture='in';
-  if(hidable.length){hideSpot=hidable[(R()*hidable.length)|0];const o=CAT[hideSpot.type].hide;posture=o[(R()*o.length)|0];hideSpot.isHide=true;hideSpot.posture=posture;}
-  const code=''+(1000+((R()*9000)|0));
-
-  // ---- static scene geometry (room shell)
-  const scene=[];
-  // floor + ceiling tiles (interior)
-  for(let gx=1;gx<N-1;gx++)for(let gy=1;gy<N-1;gy++){
-    const ax=gx*CS,ay=gy*CS,bx=(gx+1)*CS,by=(gy+1)*CS;
-    const checker=((gx+gy)&1)?pal.floorA:pal.floorB;
-    quad(scene,[[ax,ay,0],[bx,ay,0],[bx,by,0],[ax,by,0]], jit(checker,R,6),[0,0,1],'floor');
-    const lit = (R()<0.16);
-    quad(scene,[[ax,ay,ROOM_H],[bx,ay,ROOM_H],[bx,by,ROOM_H],[ax,by,ROOM_H]], lit?pal.ceilLight:pal.ceil,[0,0,-1],'ceil',lit?1:0);
-  }
-  // walls (per-cell panels) with the door cut into one panel
-  function wallPanel(ax,ay,bx,by,isDoor){
-    if(isDoor){
-      // frame around door: full panel dark, door slab + keypad
-      quad(scene,[[ax,ay,0],[bx,by,0],[bx,by,ROOM_H],[ax,ay,ROOM_H]], pal.wallDk,[cxC-(ax+bx)/2,cyC-(ay+by)/2,0],'wall');
-      return;
+    const k=(R()*4|0),rot=k*Math.PI/2,c=Math.cos(rot),s=Math.sin(rot);
+    const m=meshFurn(type,pal,R);
+    const f={type,x:cell.wx,y:cell.wy,cx:cell.cx,cy:cell.cy,h:CAT[type].h,solid:CAT[type].solid!==0,
+      parts:m.parts,mounts:[],quads:[],rotc:c,rots:s,openAll:CAT[type].open==='doors2',
+      frontN:rotV([0,1,0],c,s)};
+    let ex=CAT[type].fw/2,ey=CAT[type].fh/2;if(Math.abs(s)>0.5){const t=ex;ex=ey;ey=t;}f.ex=ex;f.ey=ey;
+    // world part slide vectors
+    for(const p of f.parts){const sv=rotV(p.slide,c,s);p.ws=[sv[0]*p.dist,sv[1]*p.dist,sv[2]*p.dist];p.openAmt=0;p.target=0;}
+    // transform quads
+    for(const q of m.quads){
+      const wp=q.p.map(pt=>[cell.wx+pt[0]*c-pt[1]*s, cell.wy+pt[0]*s+pt[1]*c, pt[2]]);
+      let acx=0,acy=0,acz=0;for(const pp of wp){acx+=pp[0];acy+=pp[1];acz+=pp[2];}
+      const nn=rotV(q.n,c,s);
+      f.quads.push({p:wp,col:q.col,n:nn,c:[acx/4,acy/4,acz/4],kind:q.kind,emis:q.emis,part:q.part,fref:f});
     }
-    quad(scene,[[ax,ay,0],[bx,by,0],[bx,by,ROOM_H],[ax,ay,ROOM_H]], jit(pal.wall,R,8),[cxC-(ax+bx)/2,cyC-(ay+by)/2,0],'wall');
+    // transform mounts (digit candidate panels)
+    for(const mo of m.mounts){
+      const panel=mo.panel.map(pt=>[cell.wx+pt[0]*c-pt[1]*s, cell.wy+pt[0]*s+pt[1]*c, pt[2]]);
+      f.mounts.push({part:mo.part,faint:mo.faint,where:mo.where||'mid',panel, fref:f});
+    }
+    // front face center (world) for aim-to-open
+    const fc=rotV([0,CAT[type].fh/2,0],c,s);f.frontC=[cell.wx+fc[0],cell.wy+fc[1]];
+    furn.push(f);return f;}
+
+  const lc=freeCell();if(lc)place('ladder',lc);
+  const count=clamp(10+((R()*5)|0)+((level/2)|0),10,16);
+  const placed=[];
+  for(let i=0;i<count;i++){const c=freeCell();if(!c)break;placed.push(place(types[(R()*types.length)|0],c));}
+
+  // ---- split 4-digit code across 4 quadrant furniture ----
+  const code=''+(1000+((R()*9000)|0));
+  const slots=[null,null,null,null];
+  const digits=[]; // active digit panels {char,slot,mount,found:false}
+  function quadOf(f){return (f.x<cxC?0:1)+(f.y<cyC?0:2);} // 0..3
+  const byQuad=[[],[],[],[]];
+  for(const f of placed){if(f.mounts.length)byQuad[quadOf(f)].push(f);}
+  const usedF=new Set();
+  for(let qd=0;qd<4;qd++){
+    let pool=byQuad[qd].filter(f=>!usedF.has(f));
+    if(!pool.length){pool=placed.filter(f=>f.mounts.length&&!usedF.has(f));}
+    if(!pool.length) continue;
+    const f=pool[(R()*pool.length)|0];usedF.add(f);
+    const mo=f.mounts[(R()*f.mounts.length)|0];
+    const ch=code[qd];
+    digits.push({char:ch,slot:qd,mount:mo,found:false,fref:f});
   }
-  for(let i=1;i<N-1;i++){
-    const a=i*CS,b=(i+1)*CS;
-    wallPanel(a,y0,b,y0, side===0&&i===idx); // south (y=y0)
-    wallPanel(a,y1,b,y1, side===1&&i===idx); // north
-    wallPanel(x0,a,x0,b, side===2&&i===idx); // west
-    wallPanel(x1,a,x1,b, side===3&&i===idx); // east
+
+  // ---- room shell ----
+  const scene=[];
+  for(let gx=1;gx<N-1;gx++)for(let gy=1;gy<N-1;gy++){
+    const ax=gx*CS,ay=gy*CS,bx2=(gx+1)*CS,by2=(gy+1)*CS;
+    const checker=((gx+gy)&1)?pal.floorA:pal.floorB;
+    pushQuad(scene,[[ax,ay,0],[bx2,ay,0],[bx2,by2,0],[ax,by2,0]],jit(checker,R,6),[0,0,1],'floor');
+    const lit=(R()<0.14);
+    pushQuad(scene,[[ax,ay,ROOM_H],[bx2,ay,ROOM_H],[bx2,by2,ROOM_H],[ax,by2,ROOM_H]],lit?pal.ceilLight:pal.ceil,[0,0,-1],'ceil',lit?1:0);
   }
-  // door slab + keypad as 3D structure on the door panel
+  function wallPanel(ax,ay,bx2,by2,isDoor){
+    const col=isDoor?pal.wallDk:jit(pal.wall,R,8);
+    pushQuad(scene,[[ax,ay,0],[bx2,by2,0],[bx2,by2,ROOM_H],[ax,ay,ROOM_H]],col,[cxC-(ax+bx2)/2,cyC-(ay+by2)/2,0],'wall');
+  }
+  for(let i=1;i<N-1;i++){const a=i*CS,b=(i+1)*CS;
+    wallPanel(a,y0,b,y0,side===0&&i===idx);wallPanel(a,y1,b,y1,side===1&&i===idx);
+    wallPanel(x0,a,x0,b,side===2&&i===idx);wallPanel(x1,a,x1,b,side===3&&i===idx);}
+  for(const q of WALLQ)scene.push(q);
   buildDoorMesh(scene,door,pal,cxC,cyC);
+  // wall-mounted shelves (a couple, high up)
+  addWallShelves(scene,pal,R,N,x0,y0,x1,y1);
 
-  // append furniture quads
-  for(const f of furn) for(const q of f.quads) scene.push(q);
-
-  return {level,N,x0,y0,x1,y1,door,pal,furn,scene,hideSpot,posture,code,px:spawn.x,py:spawn.y,pa:spawn.a};
+  return {level,N,x0,y0,x1,y1,door,pal,furn,scene,walls,code,slots,digits,px:spawn.x,py:spawn.y,pa:spawn.a};
+}
+function addWallShelves(scene,pal,R,N,x0,y0,x1,y1){
+  const n=2+((R()*2)|0);
+  for(let i=0;i<n;i++){
+    const side=(R()*4)|0, z=2.4+R()*1.0, len=CS*(1+((R()*2)|0)), d=0.45;
+    const along=1+((R()*(N-3))|0)*0+1+R()*(N-3);
+    let ax,ay,bx2,by2;
+    const startPos=(1+R()*(N-3))*CS;
+    if(side===0){ay=y0+0.02;by2=y0+d;ax=startPos;bx2=Math.min(startPos+len,x1);}
+    else if(side===1){ay=y1-d;by2=y1-0.02;ax=startPos;bx2=Math.min(startPos+len,x1);}
+    else if(side===2){ax=x0+0.02;bx2=x0+d;ay=startPos;by2=Math.min(startPos+len,y1);}
+    else{ax=x1-d;bx2=x1-0.02;ay=startPos;by2=Math.min(startPos+len,y1);}
+    bx(scene,Math.min(ax,bx2),Math.min(ay,by2),z,Math.max(ax,bx2),Math.max(ay,by2),z+.07,hsl2rgb(pal.accHue,.3,.4),R,'furn');
+    // brackets + items
+    for(let k=0;k<4;k++){const ix=lerp(Math.min(ax,bx2),Math.max(ax,bx2),(k+.5)/4),iy=(Math.min(ay,by2)+Math.max(ay,by2))/2;
+      const sh=.15+R()*.4;bx(scene,ix-.08,iy-.08,z+.07,ix+.08,iy+.08,z+.07+sh,hsl2rgb(R()*360,.6,.45));}
+  }
 }
 function buildDoorMesh(scene,door,pal,cxC,cyC){
-  const inn=[door.nx,door.ny,0];
-  const w=CS*0.34, t=0.08;
-  // build a door slab standing on the wall, facing interior
-  const ax=door.x, ay=door.y;
-  // tangent along wall
-  const tx=-door.ny, ty=door.nx;
-  const inX=door.nx*t, inY=door.ny*t; // push slab slightly into room
-  function q4(p0,p1,p2,p3,col,emis){quad(scene,[p0,p1,p2,p3],col,inn,'door',emis);}
-  const z0=0.05,z1=ROOM_H-0.1;
-  const lx=ax+tx*w+inX, rx=ax-tx*w+inX, ly=ay+ty*w+inY, ry=ay-ty*w+inY;
-  // door face
-  q4([lx,ly,z0],[rx,ry,z0],[rx,ry,z1],[lx,ly,z1], pal.metal,0);
-  // hazard stripe band
-  q4([lx,ly,z1-0.5],[rx,ry,z1-0.5],[rx,ry,z1-0.35],[lx,ly,z1-0.35], pal.accent2,0);
-  q4([lx,ly,z0+0.2],[rx,ry,z0+0.2],[rx,ry,z0+0.35],[lx,ly,z0+0.35], pal.accent2,0);
-  // keypad (emissive) near one edge
-  const kx=ax-tx*(w*0.55)+door.nx*(t+0.02), ky=ay-ty*(w*0.55)+door.ny*(t+0.02);
-  const kw=0.18;
-  q4([kx+tx*kw,ky+ty*kw,1.3],[kx-tx*kw,ky-ty*kw,1.3],[kx-tx*kw,ky-ty*kw,1.7],[kx+tx*kw,ky+ty*kw,1.7], pal.glow,1);
+  const inn=[door.nx,door.ny,0],w=CS*0.36,t=0.08;
+  const ax=door.x,ay=door.y,tx=-door.ny,ty=door.nx,inX=door.nx*t,inY=door.ny*t;
+  const q4=(p0,p1,p2,p3,col,emis)=>pushQuad(scene,[p0,p1,p2,p3],col,inn,'door',emis);
+  const z0=0.05,z1=ROOM_H*0.82;
+  const lx=ax+tx*w+inX,rx=ax-tx*w+inX,ly=ay+ty*w+inY,ry=ay-ty*w+inY;
+  q4([lx,ly,z0],[rx,ry,z0],[rx,ry,z1],[lx,ly,z1],pal.metal,0);
+  q4([lx,ly,z1-0.5],[rx,ry,z1-0.5],[rx,ry,z1-0.34],[lx,ly,z1-0.34],pal.accent2,0);
+  q4([lx,ly,z0+0.25],[rx,ry,z0+0.25],[rx,ry,z0+0.41],[lx,ly,z0+0.41],pal.accent2,0);
+  const kx=ax-tx*(w*0.55)+door.nx*(t+0.02),ky=ay-ty*(w*0.55)+door.ny*(t+0.02),kw=0.2;
+  q4([kx+tx*kw,ky+ty*kw,1.35],[kx-tx*kw,ky-ty*kw,1.35],[kx-tx*kw,ky-ty*kw,1.8],[kx+tx*kw,ky+ty*kw,1.8],pal.glow,1);
 }
 
 //---------------- player / input
-const player={x:0,y:0,a:0,pitch:0,baseH:1.6,jumpZ:0,jumpV:0,climb:0,camZ:1.6,crawl:false,found:false,nearLadder:false};
+const player={x:0,y:0,a:0,pitch:0,baseH:1.65,jumpZ:0,jumpV:0,climb:0,camZ:1.65,crawl:false,nearLadder:false};
 const input={fwd:0,strafe:0,look:0,lookUp:0,jump:false,climbHold:false};
 let keys={};
 let foundFlash=0;
 
 function loadRoom(level){
   G=buildRoom(level);
-  player.x=G.px;player.y=G.py;player.a=G.pa;player.pitch=0;
-  player.crawl=false;player.jumpZ=0;player.jumpV=0;player.climb=0;player.found=false;player.baseH=1.6;player.camZ=1.6;
+  player.x=G.px;player.y=G.py;player.a=G.pa;player.pitch=0;player.crawl=false;player.jumpZ=0;player.jumpV=0;player.climb=0;player.baseH=1.65;player.camZ=1.65;
   document.getElementById('roomLbl').textContent='ROOM '+String(level).padStart(2,'0');
-  const cvl=document.getElementById('codeVal');cvl.textContent='????';cvl.style.color='#3ff';
-  setCrawlBtn(false);
+  setSlots();setCrawlBtn(false);
 }
+function setSlots(){document.getElementById('codeVal').textContent=G.slots.map(s=>s==null?'_':s).join(' ');}
 
 //---------------- collision
 function blocked(nx,ny){
   const r=0.42;
-  if(nx<G.x0+r||nx>G.x1-r||ny<G.y0+r||ny>G.y1-r) return true;
+  if(nx<G.x0+r||nx>G.x1-r||ny<G.y0+r||ny>G.y1-r)return true;
+  for(const w of G.walls){if(nx>w.x0-r&&nx<w.x1+r&&ny>w.y0-r&&ny<w.y1+r)return true;}
   for(const f of G.furn){if(!f.solid)continue;if(Math.abs(nx-f.x)<f.ex+r&&Math.abs(ny-f.y)<f.ey+r)return true;}
   return false;
 }
@@ -432,145 +489,162 @@ function moveP(dx,dy){if(!blocked(player.x+dx,player.y))player.x+=dx;if(!blocked
 
 //---------------- update
 function update(dt){
-  if(keys['arrowleft'])player.a-=2.2*dt;
-  if(keys['arrowright'])player.a+=2.2*dt;
-  if(keys['arrowup'])player.pitch=clamp(player.pitch+1.2*dt,-1.2,1.2);
-  if(keys['arrowdown'])player.pitch=clamp(player.pitch-1.2*dt,-1.2,1.2);
-  player.a+=input.look;input.look=0;
-  player.pitch=clamp(player.pitch+input.lookUp,-1.3,1.3);input.lookUp=0;
+  if(keys['arrowleft'])player.a-=2.2*dt;if(keys['arrowright'])player.a+=2.2*dt;
+  if(keys['arrowup'])player.pitch=clamp(player.pitch+1.2*dt,-1.3,1.3);if(keys['arrowdown'])player.pitch=clamp(player.pitch-1.2*dt,-1.3,1.3);
+  player.a+=input.look;input.look=0;player.pitch=clamp(player.pitch+input.lookUp,-1.35,1.35);input.lookUp=0;
 
-  let mf=0,ms=0;
-  if(keys['w'])mf+=1;if(keys['s'])mf-=1;if(keys['a'])ms-=1;if(keys['d'])ms+=1;
+  let mf=0,ms=0;if(keys['w'])mf+=1;if(keys['s'])mf-=1;if(keys['a'])ms-=1;if(keys['d'])ms+=1;
   mf+=input.fwd;ms+=input.strafe;
-  const spd=(player.crawl?1.7:(player.climb>0.3?1.4:3.4))*dt;
+  const spd=(player.crawl?1.8:(player.climb>0.3?1.5:3.6))*dt;
   if(mf||ms){const l=Math.hypot(mf,ms)||1;mf/=l;ms/=l;
-    const dx=(Math.cos(player.a)*mf+Math.cos(player.a+Math.PI/2)*ms)*spd;
-    const dy=(Math.sin(player.a)*mf+Math.sin(player.a+Math.PI/2)*ms)*spd;
-    moveP(dx,dy);}
+    const dx=(Math.cos(player.a)*mf+Math.cos(player.a-Math.PI/2)*ms)*spd;
+    const dy=(Math.sin(player.a)*mf+Math.sin(player.a-Math.PI/2)*ms)*spd;moveP(dx,dy);}
 
   player.nearLadder=false;
-  for(const f of G.furn){if(f.type==='ladder'&&Math.hypot(player.x-f.x,player.y-f.y)<CS*0.75){player.nearLadder=true;break;}}
+  for(const f of G.furn){if(f.type==='ladder'&&Math.hypot(player.x-f.x,player.y-f.y)<CS*0.8){player.nearLadder=true;break;}}
   document.getElementById('bClimb').style.display=player.nearLadder?'flex':'none';
-
   const climbUp=player.nearLadder&&(input.climbHold||keys[' ']);
-  if(climbUp)player.climb=clamp(player.climb+3.0*dt,0,2.4);
-  else if(player.climb>0)player.climb=clamp(player.climb-5.5*dt,0,2.4);
+  if(climbUp)player.climb=clamp(player.climb+3.2*dt,0,3.3);else if(player.climb>0)player.climb=clamp(player.climb-5.5*dt,0,3.3);
 
-  if((input.jump||keys[' '])&&player.jumpZ===0&&player.climb<0.2&&!player.crawl)player.jumpV=4.2;
-  input.jump=false;
+  if((input.jump||keys[' '])&&player.jumpZ===0&&player.climb<0.2&&!player.crawl)player.jumpV=4.4;input.jump=false;
   if(player.jumpV!==0||player.jumpZ>0){player.jumpZ+=player.jumpV*dt;player.jumpV-=12*dt;if(player.jumpZ<=0){player.jumpZ=0;player.jumpV=0;}}
+  player.baseH=player.crawl?0.65:1.65;player.camZ=clamp(player.baseH+player.jumpZ+player.climb,0.4,ROOM_H-0.4);
 
-  player.baseH=player.crawl?0.65:1.6;
-  player.camZ=clamp(player.baseH+player.jumpZ+player.climb,0.4,2.85);
+  // ---- auto open drawers/doors you're looking at ----
+  for(const f of G.furn)for(const p of f.parts)p.target=0;
+  const look=aimedFurniture();
+  if(look){const {f,partIdx}=look;
+    if(f.openAll||partIdx<0){for(const p of f.parts)p.target=1;} else f.parts[partIdx].target=1;}
+  for(const f of G.furn)for(const p of f.parts){const sp=(p.target>p.openAmt)?3.0:2.4;p.openAmt=clamp(p.openAmt+(p.target-p.openAmt)*sp*dt,0,1);}
 
-  if(G.hideSpot&&!player.found&&G.posture==='top'){
-    const near=Math.hypot(player.x-G.hideSpot.x,player.y-G.hideSpot.y)<CS*1.4;
-    const elev=player.climb+player.jumpZ;
-    if(player.climb>1.9||(elev>1.0&&near)) revealCode("From up high you spot it — code on top of the "+CAT[G.hideSpot.type].name+".");
-  }
   updatePrompt();
   if(foundFlash>0)foundFlash-=dt;
+  // door button
+  document.getElementById('bEnter').style.display=nearDoor()?'flex':'none';
 }
-function revealCode(msg){if(player.found)return;player.found=true;foundFlash=1.2;
-  const v=document.getElementById('codeVal');v.textContent=G.code;v.style.color='#0fa';
-  toast(msg+"  ACCESS CODE: "+G.code,3400);}
 
-//---------------- interaction
-function nearestFurn(){let best=null,bd=CS*0.95;const fx=Math.cos(player.a),fy=Math.sin(player.a);
-  for(const f of G.furn){if(f.type==='ladder')continue;const dx=f.x-player.x,dy=f.y-player.y,d=Math.hypot(dx,dy);
-    if(d>CS*0.95)continue;const dot=(dx*fx+dy*fy)/(d||1);if(dot<0.2)continue;const s=d-dot*1.0;if(s<bd){bd=s;best=f;}}
-  return best;}
-function nearDoor(){const dx=G.door.x-player.x,dy=G.door.y-player.y,d=Math.hypot(dx,dy);if(d>CS*1.1)return false;
-  const fx=Math.cos(player.a),fy=Math.sin(player.a);return (dx*fx+dy*fy)/(d||1)>0.0;}
-function updatePrompt(){const pe=document.getElementById('prompt');
-  if(nearDoor()){pe.style.display='block';pe.textContent='⌨  SEARCH → enter door code';return;}
-  const f=nearestFurn();if(f){pe.style.display='block';pe.textContent='🔍 search '+CAT[f.type].name;return;}
-  pe.style.display='none';}
-const flavors=["Empty. Just dust and regret.","Cracked plaster, nothing else.","Old wires, no code.","Scratched warnings, no numbers.","A dead roach. Charming.","Sealed shut.","Just grime and shadow.","Someone got here first."];
-function doSearch(){
-  if(nearDoor()){openPad();return;}
-  const f=nearestFurn();if(!f)return;
-  if(f.isHide){const need=f.posture;
-    const isCrawl=player.crawl&&player.jumpZ<0.15&&player.climb<0.15;
-    const isStand=!player.crawl&&player.camZ<1.9;
-    if(need==='under'){isCrawl?revealCode("Taped underneath the "+CAT[f.type].name+" — there it is!"):toast("There's a gap underneath — try CRAWLING to look under it.",2600);}
-    else if(need==='in'){(isStand||player.crawl)?revealCode("Stashed inside the "+CAT[f.type].name+"."):toast("Hard to reach from up here.",1800);}
-    else if(need==='top'){toast("Something glints on top — CLIMB the ladder or JUMP up high near it.",2800);}
-  } else toast(flavors[(Math.random()*flavors.length)|0],1500);
+// nearest openable furniture you're aiming at; returns {f,partIdx}
+function aimedFurniture(){
+  let best=null,bd=1e9;const fx=Math.cos(player.a),fy=Math.sin(player.a);
+  for(const f of G.furn){if(!f.parts.length)continue;
+    const dx=f.x-player.x,dy=f.y-player.y,d=Math.hypot(dx,dy);if(d>CS*1.15)continue;
+    const dot=(dx*fx+dy*fy)/(d||1);if(dot<0.45)continue;
+    if(d<bd){bd=d;best=f;}}
+  if(!best)return null;
+  // which part: intersect aim ray with front plane, get z
+  const fX=Math.cos(player.a)*Math.cos(player.pitch),fY=Math.sin(player.a)*Math.cos(player.pitch),fZ=Math.sin(player.pitch);
+  const N=best.frontN;const denom=fX*N[0]+fY*N[1];let partIdx=-1;
+  if(Math.abs(denom)>1e-4){
+    const t=((best.frontC[0]-player.x)*N[0]+(best.frontC[1]-player.y)*N[1])/denom;
+    if(t>0){const hz=player.camZ+fZ*t;
+      let bestd=1e9;for(let i=0;i<best.parts.length;i++){const b=best.parts[i].band;const mid=(b[0]+b[1])/2;const dd=Math.abs(hz-mid);if(hz>=b[0]-0.15&&hz<=b[1]+0.15&&dd<bestd){bestd=dd;partIdx=i;}}
+      if(partIdx<0){let bd2=1e9;for(let i=0;i<best.parts.length;i++){const b=best.parts[i].band;const mid=(b[0]+b[1])/2;const dd=Math.abs(hz-mid);if(dd<bd2){bd2=dd;partIdx=i;}}}
+    }
+  }
+  if(best.parts.length===1)partIdx=0;
+  return {f:best,partIdx};
 }
+
+//---------------- interaction (door only)
+function nearDoor(){const dx=G.door.x-player.x,dy=G.door.y-player.y,d=Math.hypot(dx,dy);if(d>CS*1.15)return false;
+  const fx=Math.cos(player.a),fy=Math.sin(player.a);return (dx*fx+dy*fy)/(d||1)>-0.1;}
+function updatePrompt(){const pe=document.getElementById('prompt');
+  if(nearDoor()){pe.style.display='block';pe.textContent='⌨  press E (or ENTER CODE) to type the code';return;}
+  const look=aimedFurniture();
+  if(look){pe.style.display='block';pe.textContent='👁  examining '+CAT[look.f.type].name+(look.f.parts.length>1?' — aim a drawer to open it':'');return;}
+  pe.style.display='none';}
 
 //==================================================================
 // 3D RENDER
 //==================================================================
-const LIGHT=(()=>{const v=[0.35,0.25,0.90];const l=Math.hypot(...v);return [v[0]/l,v[1]/l,v[2]/l];})();
+const LIGHT=(()=>{const v=[0.35,0.25,0.90],l=Math.hypot(...v);return [v[0]/l,v[1]/l,v[2]/l];})();
 let camR=[1,0,0],camU=[0,0,1],camF=[0,1,0],camP=[0,0,0];
-function setupCam(){
-  const a=player.a,p=player.pitch,cp=Math.cos(p);
+function setupCam(){const a=player.a,p=player.pitch,cp=Math.cos(p);
   camF=[cp*Math.cos(a),cp*Math.sin(a),Math.sin(p)];
-  // right = normalize(cross(F, worldUp))
-  let rx=camF[1]*1-camF[2]*0, ry=camF[2]*0-camF[0]*1, rz=0;
-  const rl=Math.hypot(rx,ry,rz)||1; camR=[rx/rl,ry/rl,rz/rl];
-  // up = cross(R, F)
-  camU=[camR[1]*camF[2]-camR[2]*camF[1], camR[2]*camF[0]-camR[0]*camF[2], camR[0]*camF[1]-camR[1]*camF[0]];
-  camP=[player.x,player.y,player.camZ];
-}
-function toCam(p){const rx=p[0]-camP[0],ry=p[1]-camP[1],rz=p[2]-camP[2];
+  let rx=camF[1],ry=-camF[0],rz=0;const rl=Math.hypot(rx,ry,rz)||1;camR=[rx/rl,ry/rl,0];
+  camU=[camR[1]*camF[2]-camR[2]*camF[1],camR[2]*camF[0]-camR[0]*camF[2],camR[0]*camF[1]-camR[1]*camF[0]];
+  camP=[player.x,player.y,player.camZ];}
+function toCam(p,off){let rx=p[0]-camP[0],ry=p[1]-camP[1],rz=p[2]-camP[2];
+  if(off){rx+=off[0];ry+=off[1];rz+=off[2];}
   return [rx*camR[0]+ry*camR[1]+rz*camR[2], rx*camU[0]+ry*camU[1]+rz*camU[2], rx*camF[0]+ry*camF[1]+rz*camF[2]];}
-function clipNear(pts){const out=[];const n=pts.length;
-  for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];const ain=a[2]>=ZNEAR,bin=b[2]>=ZNEAR;
-    if(ain)out.push(a);
-    if(ain!==bin){const t=(ZNEAR-a[2])/(b[2]-a[2]);out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,ZNEAR]);}}
-  return out;}
-const MAXVIEW=CS*7.5;
+function clipNear(pts){const out=[],n=pts.length;
+  for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n],ain=a[2]>=ZNEAR,bin=b[2]>=ZNEAR;
+    if(ain)out.push(a);if(ain!==bin){const t=(ZNEAR-a[2])/(b[2]-a[2]);out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,ZNEAR]);}}return out;}
+const MAXVIEW=CS*8;
+function shadeFill(q,avg,off){
+  let R8,Gg,B8;
+  if(q.emis){R8=q.col[0];Gg=q.col[1];B8=q.col[2];}
+  else{const diff=Math.max(0,q.n[0]*LIGHT[0]+q.n[1]*LIGHT[1]+q.n[2]*LIGHT[2]);const li=0.42+0.58*diff;R8=q.col[0]*li;Gg=q.col[1]*li;B8=q.col[2]*li;}
+  let ft=clamp((avg-2)/MAXVIEW,0,0.82);if(q.emis)ft*=0.4;
+  R8=lerp(R8,G.pal.ceil[0],ft);Gg=lerp(Gg,G.pal.ceil[1],ft);B8=lerp(B8,G.pal.ceil[2],ft);
+  return [R8|0,Gg|0,B8|0];
+}
+function projectQuad(q,off){
+  const vx=camP[0]-q.c[0]-(off?off[0]:0),vy=camP[1]-q.c[1]-(off?off[1]:0),vz=camP[2]-q.c[2]-(off?off[2]:0);
+  if(q.n[0]*vx+q.n[1]*vy+q.n[2]*vz<=0)return null;
+  if(vx*vx+vy*vy+vz*vz>MAXVIEW*MAXVIEW*1.7)return null;
+  const cp=[toCam(q.p[0],off),toCam(q.p[1],off),toCam(q.p[2],off),toCam(q.p[3],off)];
+  if(cp[0][2]<ZNEAR&&cp[1][2]<ZNEAR&&cp[2][2]<ZNEAR&&cp[3][2]<ZNEAR)return null;
+  const poly=clipNear(cp);if(poly.length<3)return null;
+  let avg=0,sx=[],sy=[],minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+  for(const c of poly){const x=HALF+c[0]*FOCAL/c[2],y=HALFY-c[1]*FOCAL/c[2];sx.push(x);sy.push(y);avg+=c[2];
+    if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;}
+  avg/=poly.length;if(maxx<0||minx>RW||maxy<0||miny>RH)return null;
+  return {avg,sx,sy,n:poly.length};
+}
 function render(){
-  setupCam();
-  ctx.fillStyle='#05080a';ctx.fillRect(0,0,RW,RH);
-  const fog=G.pal.ceil; // fog color
+  setupCam();ctx.fillStyle='#05080a';ctx.fillRect(0,0,RW,RH);
   const list=[];
-  const scene=G.scene;
-  for(let i=0;i<scene.length;i++){
-    const q=scene[i];
-    // backface cull (normal toward camera)
-    const vx=camP[0]-q.c[0],vy=camP[1]-q.c[1],vz=camP[2]-q.c[2];
-    if(q.n[0]*vx+q.n[1]*vy+q.n[2]*vz<=0) continue;
-    // distance cull
-    const dc=vx*vx+vy*vy+vz*vz; if(dc>MAXVIEW*MAXVIEW*1.6) continue;
-    // transform
-    const cp=[toCam(q.p[0]),toCam(q.p[1]),toCam(q.p[2]),toCam(q.p[3])];
-    if(cp[0][2]<ZNEAR&&cp[1][2]<ZNEAR&&cp[2][2]<ZNEAR&&cp[3][2]<ZNEAR) continue;
-    const poly=clipNear(cp); if(poly.length<3) continue;
-    // project
-    let avg=0, sx=[],sy=[], minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
-    for(const c of poly){const x=HALF+c[0]*FOCAL/c[2], y=HALFY-c[1]*FOCAL/c[2];sx.push(x);sy.push(y);avg+=c[2];
-      if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;}
-    avg/=poly.length;
-    if(maxx<0||minx>RW||maxy<0||miny>RH) continue;
-    // shade
-    let R8,Gg,B8;
-    if(q.emis){R8=q.col[0];Gg=q.col[1];B8=q.col[2];}
-    else{const diff=Math.max(0,q.n[0]*LIGHT[0]+q.n[1]*LIGHT[1]+q.n[2]*LIGHT[2]);const li=0.42+0.58*diff;
-      R8=q.col[0]*li;Gg=q.col[1]*li;B8=q.col[2]*li;}
-    let ft=clamp((avg-2)/MAXVIEW,0,0.82); if(q.emis)ft*=0.4;
-    R8=lerp(R8,fog[0],ft);Gg=lerp(Gg,fog[1],ft);B8=lerp(B8,fog[2],ft);
-    list.push({avg,sx,sy,n:poly.length,fill:'rgb('+(R8|0)+','+(Gg|0)+','+(B8|0)+')',kind:q.kind,emis:q.emis,
-      edge:q.kind==='furn'||q.kind==='door'? 'rgba('+((R8*0.45)|0)+','+((Gg*0.45)|0)+','+((B8*0.45)|0)+',0.9)':null});
-  }
+  // room shell
+  for(const q of G.scene){const pr=projectQuad(q,null);if(!pr)continue;const c=shadeFill(q,pr.avg,null);
+    list.push({...pr,fill:'rgb('+c[0]+','+c[1]+','+c[2]+')',edge:(q.kind==='furn'||q.kind==='door')?'rgba('+((c[0]*.45)|0)+','+((c[1]*.45)|0)+','+((c[2]*.45)|0)+',.9)':null});}
+  // furniture (with part offsets)
+  for(const f of G.furn)for(const q of f.quads){
+    const off=q.part>=0?[f.parts[q.part].ws[0]*f.parts[q.part].openAmt,f.parts[q.part].ws[1]*f.parts[q.part].openAmt,f.parts[q.part].ws[2]*f.parts[q.part].openAmt]:null;
+    const pr=projectQuad(q,off);if(!pr)continue;const c=shadeFill(q,pr.avg,off);
+    list.push({...pr,fill:'rgb('+c[0]+','+c[1]+','+c[2]+')',edge:'rgba('+((c[0]*.45)|0)+','+((c[1]*.45)|0)+','+((c[2]*.45)|0)+',.9)'});}
   list.sort((a,b)=>b.avg-a.avg);
-  for(const f of list){
-    ctx.beginPath();ctx.moveTo(f.sx[0],f.sy[0]);
-    for(let i=1;i<f.n;i++)ctx.lineTo(f.sx[i],f.sy[i]);
-    ctx.closePath();ctx.fillStyle=f.fill;ctx.fill();
-    if(f.edge){ctx.lineWidth=1;ctx.strokeStyle=f.edge;ctx.stroke();}
-    if(f.emis){ctx.globalAlpha=0.25;ctx.fillStyle=f.fill;ctx.fill();ctx.globalAlpha=1;}
-  }
+  for(const f of list){ctx.beginPath();ctx.moveTo(f.sx[0],f.sy[0]);for(let i=1;i<f.n;i++)ctx.lineTo(f.sx[i],f.sy[i]);ctx.closePath();
+    ctx.fillStyle=f.fill;ctx.fill();if(f.edge){ctx.lineWidth=1;ctx.strokeStyle=f.edge;ctx.stroke();}}
+  // ---- printed code digits (drawn last, on top of their furniture) ----
+  drawDigits();
   if(foundFlash>0){ctx.fillStyle='rgba(0,255,150,'+(foundFlash*0.22)+')';ctx.fillRect(0,0,RW,RH);}
+}
+function drawDigits(){
+  for(const dg of G.digits){
+    const mo=dg.mount, f=dg.fref;
+    let off=null,hidden=false;
+    if(mo.part>=0){const p=f.parts[mo.part];off=[p.ws[0]*p.openAmt,p.ws[1]*p.openAmt,p.ws[2]*p.openAmt];if(p.openAmt<0.5)hidden=true;}
+    if(hidden)continue;
+    // project 4 corners
+    const cc=mo.panel.map(pt=>toCam(pt,off));
+    if(cc[0][2]<ZNEAR||cc[1][2]<ZNEAR||cc[2][2]<ZNEAR||cc[3][2]<ZNEAR)continue;
+    const sp=cc.map(c=>[HALF+c[0]*FOCAL/c[2],HALFY-c[1]*FOCAL/c[2]]);
+    const depth=(cc[0][2]+cc[1][2]+cc[2][2]+cc[3][2])/4;
+    if(depth>CS*2.4)continue; // too far to read — keeps it "hard to find"
+    // faint contrast vs furniture
+    const alpha=clamp(1.1 - depth/(CS*2.4),0.18,0.8)*(mo.faint?0.7:1);
+    const style=dg.found? 'rgba(80,255,170,'+Math.min(1,alpha+0.2)+')' : 'rgba(20,22,24,'+alpha+')';
+    drawGlyph(sp[0],sp[1],sp[3],dg.char,style);
+    // discovery: centered + close
+    const ctr=[(sp[0][0]+sp[1][0]+sp[2][0]+sp[3][0])/4,(sp[0][1]+sp[1][1]+sp[2][1]+sp[3][1])/4];
+    if(!dg.found && depth<CS*1.5 && Math.hypot(ctr[0]-HALF,ctr[1]-HALFY)<RW*0.10){
+      dg.found=true;G.slots[dg.slot]=dg.char;setSlots();foundFlash=0.9;
+      toast('Digit found: '+dg.char+'  ('+G.slots.filter(s=>s!=null).length+'/4)',1900);
+    }
+  }
+}
+function drawGlyph(p0,p1,p3,char,style){
+  const ex=[(p1[0]-p0[0])/10,(p1[1]-p0[1])/10],ey=[(p3[0]-p0[0])/10,(p3[1]-p0[1])/10];
+  ctx.save();ctx.setTransform(ex[0],ex[1],ey[0],ey[1],p0[0],p0[1]);
+  ctx.fillStyle=style;ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(char,5,5);ctx.restore();ctx.setTransform(1,0,0,1,0,0);
 }
 
 //---------------- loop
 let last=performance.now(),fAcc=0,fCnt=0;
 function frame(now){let dt=(now-last)/1000;last=now;if(dt>0.05)dt=0.05;
-  if(started){update(dt);render();
-    fAcc+=dt;fCnt++;if(fAcc>0.5){document.getElementById('fps').textContent=(fCnt/fAcc|0)+' fps';fAcc=0;fCnt=0;}}
+  if(started){update(dt);render();fAcc+=dt;fCnt++;if(fAcc>0.5){document.getElementById('fps').textContent=(fCnt/fAcc|0)+' fps';fAcc=0;fCnt=0;}}
   requestAnimationFrame(frame);}
 requestAnimationFrame(frame);
 
@@ -578,10 +652,15 @@ requestAnimationFrame(frame);
 // INPUT
 //==================================================================
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;
-  if(k==='c')toggleCrawl();if(k==='e')doSearch();if(k===' ')e.preventDefault();});
+  if(k==='c')toggleCrawl();if(k==='e'){if(nearDoor())openPad();}if(k===' ')e.preventDefault();});
 window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
-cv.addEventListener('click',()=>{if(started&&!('ontouchstart'in window))cv.requestPointerLock&&cv.requestPointerLock();});
-document.addEventListener('mousemove',e=>{if(document.pointerLockElement===cv){player.a+=e.movementX*0.0022;player.pitch=clamp(player.pitch-e.movementY*0.0022,-1.3,1.3);}});
+// mouse: click to connect (pointer lock); also drag-look fallback
+let mouseDown=false,mLX=0,mLY=0;
+cv.addEventListener('mousedown',e=>{mouseDown=true;mLX=e.clientX;mLY=e.clientY;if(started&&cv.requestPointerLock)cv.requestPointerLock();});
+window.addEventListener('mouseup',()=>{mouseDown=false;});
+document.addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===cv){player.a+=e.movementX*0.0022;player.pitch=clamp(player.pitch-e.movementY*0.0022,-1.35,1.35);}
+  else if(mouseDown&&joyId!=='m'){player.a+=(e.clientX-mLX)*0.004;player.pitch=clamp(player.pitch-(e.clientY-mLY)*0.004,-1.35,1.35);mLX=e.clientX;mLY=e.clientY;}});
 
 let lookId=null,lLX=0,lLY=0;
 function isCtl(t){return t.closest&&t.closest('#joy, .btn, #pad, #start');}
@@ -597,7 +676,7 @@ function joyEnd(){joyId=null;knob.style.left='50%';knob.style.top='50%';input.fw
 joy.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];joyStart(t.clientX,t.clientY,t.identifier);},{passive:false});
 joy.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===joyId){joyMove(t.clientX,t.clientY);e.preventDefault();}},{passive:false});
 joy.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===joyId)joyEnd();},{passive:false});
-joy.addEventListener('mousedown',e=>joyStart(e.clientX,e.clientY,'m'));
+joy.addEventListener('mousedown',e=>{e.stopPropagation();joyStart(e.clientX,e.clientY,'m');});
 window.addEventListener('mousemove',e=>{if(joyId==='m')joyMove(e.clientX,e.clientY);});
 window.addEventListener('mouseup',()=>{if(joyId==='m')joyEnd();});
 
@@ -607,30 +686,31 @@ function bindBtn(id,dn,up){const el=document.getElementById(id);
   el.addEventListener('mousedown',a);el.addEventListener('mouseup',b);}
 bindBtn('bJump',()=>input.jump=true);
 bindBtn('bClimb',()=>input.climbHold=true,()=>input.climbHold=false);
-bindBtn('bSearch',()=>doSearch());
+bindBtn('bEnter',()=>{if(nearDoor())openPad();});
 document.getElementById('bCrawl').addEventListener('touchstart',e=>{e.preventDefault();toggleCrawl();},{passive:false});
 document.getElementById('bCrawl').addEventListener('mousedown',e=>{e.preventDefault();toggleCrawl();});
 function toggleCrawl(){player.crawl=!player.crawl;setCrawlBtn(player.crawl);}
 function setCrawlBtn(on){document.getElementById('bCrawl').classList.toggle('on',on);}
 
-let toastT=null;
-function toast(m,ms){const el=document.getElementById('toast');el.textContent=m;el.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity='0',ms||2000);}
+let toastT=null;function toast(m,ms){const el=document.getElementById('toast');el.textContent=m;el.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity='0',ms||2000);}
 
 let padVal='';
-function openPad(){padVal='';updatePad();document.getElementById('pad').style.display='flex';}
+function openPad(){padVal='';updatePad();document.getElementById('pad').style.display='flex';if(document.pointerLockElement)document.exitPointerLock();}
 function closePad(){document.getElementById('pad').style.display='none';}
 function updatePad(bad){const d=document.getElementById('padDisp');d.textContent=(padVal+'____').slice(0,4);d.classList.toggle('bad',!!bad);}
 document.getElementById('padgrid').addEventListener('click',e=>{const k=e.target.getAttribute('data-k');if(!k)return;
   if(k==='C'){padVal='';updatePad();}else if(k==='E')submitPad();else if(padVal.length<4){padVal+=k;updatePad();}});
 document.getElementById('pad').addEventListener('click',e=>{if(e.target.id==='pad')closePad();});
-function submitPad(){if(padVal===G.code){closePad();toast('ACCESS GRANTED // descending...',1500);loadRoom(G.level+1);}else{updatePad(true);setTimeout(()=>{padVal='';updatePad();},450);}}
+function gotoRoom(level){const fd=document.getElementById('fade');fd.textContent='';fd.style.opacity='1';
+  setTimeout(()=>{loadRoom(level);fd.textContent='ROOM '+String(level).padStart(2,'0');
+    setTimeout(()=>{fd.style.opacity='0';},650);},480);}
+function submitPad(){if(padVal===G.code){closePad();toast('ACCESS GRANTED // descending...',1500);gotoRoom(G.level+1);}else{updatePad(true);setTimeout(()=>{padVal='';updatePad();},450);}}
 window.addEventListener('keydown',e=>{if(document.getElementById('pad').style.display!=='flex')return;
   if(/[0-9]/.test(e.key)){if(padVal.length<4){padVal+=e.key;updatePad();}}else if(e.key==='Enter')submitPad();
   else if(e.key==='Backspace'||e.key==='Escape'){if(e.key==='Escape')closePad();padVal=padVal.slice(0,-1);updatePad();}});
 
-document.getElementById('startBtn').addEventListener('click',()=>{
-  document.getElementById('start').classList.add('hide');started=true;last=performance.now();loadRoom(1);
-  toast('Find the code. Crawl low, climb high.',2600);});
+document.getElementById('startBtn').addEventListener('click',()=>{document.getElementById('start').classList.add('hide');started=true;last=performance.now();loadRoom(1);
+  toast('Four digits hidden around the room. Open drawers, crawl, climb.',3000);});
 loadRoom(1);
 </script>
 </body>
